@@ -1,0 +1,17 @@
+{
+  "name": "verifybot",
+  "version": "1.0.0",
+  "description": "UCLA Verification Bot",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "entrohpy",
+  "license": "ISC",
+  "dependencies": {
+    "@sendgrid/mail": "^7.2.5",
+    "discord.js": "^12.3.1",
+    "sqlite": "^4.0.14",
+    "sqlite3": "^5.0.0"
+  }
+}
