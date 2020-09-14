@@ -1,13 +1,16 @@
 {
-  "name": "verifybot",
+  "name": "discord-email-verifier-bot",
   "version": "1.0.0",
-  "description": "UCLA Verification Bot",
+  "description": "ACM at UCLA Discord Server Verification Bot",
   "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "entrohpy",
-  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/entrohpy/discord-email-verifier-bot.git"
+  },
   "dependencies": {
     "@sendgrid/mail": "^7.2.5",
     "discord.js": "^12.3.1",
