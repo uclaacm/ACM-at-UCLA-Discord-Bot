@@ -26,7 +26,7 @@ async function verifyAndSendEmail(userid, username, email) {
   }
 
   let db = await sqlite.open({
-    filename: './db/users.db',
+    filename: './users.db',
     driver: sqlite3.Database
   });
 
@@ -75,7 +75,7 @@ async function verifyAndSendEmail(userid, username, email) {
 
 async function verifyAndAddRole(code, role_name, author) {
   let db = await sqlite.open({
-    filename: './db/users.db',
+    filename: './users.db',
     driver: sqlite3.Database
   });
 
@@ -109,7 +109,7 @@ client.on('ready', async () => {
   console.log(`Logged in as ${client.user.tag}!`);
 
   let db = await sqlite.open({
-    filename: './db/users.db',
+    filename: './users.db',
     driver: sqlite3.Database
   });
 
