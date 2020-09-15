@@ -47,7 +47,7 @@ Use `config.js` to set the following parameters,
   discord: {
     server_id: '<discord_server_id>',
     verified_role_name: 'Verified',
-  }
+  },
   sendgrid: {
     template_id: '<dynamic_template_id>',
     sender: '<verified_sender_id>',
