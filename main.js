@@ -131,18 +131,184 @@ WHERE
       'Invalid/Expired verification code.'
     ];
   }
-  let server = client.guilds.cache.get(process.env.DISCORD_SERVER_ID)
-  var memberRole = server.roles.cache.find(role => role.name === role_name)
-  let member = server.members.cache.get(author.id)
-  member.roles.add(memberRole)
-  await db.run(`DELETE FROM usercodes WHERE userid=?`, author.id);
 
-  await db.run(`INSERT INTO users(userid, username, discriminator, email) VALUES(?, ?, ?, ?)`, [author.id, author.username, author.discriminator, row.email]);
+  member.roles.add(role);
+  member.setNickname(row.nickname);
+
+  try {
+  await db.run(`DELETE FROM usercodes WHERE userid = ?`, [author.id]);
+  await db.run(`
+INSERT INTO
+  users(userid, username, discriminator, nickname, email)
+VALUES
+  (?, ?, ?, ?, ?)
+  ON CONFLICT(userid) DO
+  UPDATE
+  SET
+    email = ?,
+    nickname = ?`,
+      [author.id, author.username, author.discriminator, row.nickname, row.email, row.email, row.nickname]);
+  } catch (e) {
+    console.error(e.toString());
+    await db.close();
+    return [
+      {message: e.toString()},
+      null
+    ];
+  }
 
   await db.close();
   return [
     null,
-    'You have now been verified and can access the server!'
+    `Thanks ${row.nickname}! You have now been verified and can access the server!`
+  ];
+}
+
+// who are you???
+async function whoami(userid) {
+  let db = await sqlite.open({
+    filename: config.db_path,
+    driver: sqlite3.Database
+  });
+
+  var row = null;
+  try {
+    row = await db.get(`
+SELECT
+  nickname, email
+FROM users
+WHERE
+  userid = ?`,
+      [userid]);
+  } catch (e) {
+    console.error(e.toString());
+    await db.close();
+    return [
+      {message: e.toString()},
+      null
+    ];
+  }
+
+  if (!row) {
+    return [
+      null,
+      `
+Hmmm I'm really not sure myself but I'd love to get to know you!
+Use \`!iam <ucla_email_address> <preferred_nickname>\` and verify your email address.`
+    ]
+  }
+
+  await db.close();
+  return [
+    null,
+    `
+Why, you're ${row.nickname} of course!
+Your verified email address is ${row.email}`
+  ];
+}
+
+// set nickname after verification
+async function setNick(userid, nickname) {
+  let db = await sqlite.open({
+    filename: config.db_path,
+    driver: sqlite3.Database
+  });
+
+  var row = null;
+  try {
+    row = await db.get(`
+SELECT
+  nickname, userid
+FROM users
+WHERE
+  userid = ?`,
+      [userid]);
+  } catch (e) {
+    console.error(e.toString());
+    await db.close();
+    return [
+      {message: e.toString()},
+      null
+    ];
+  }
+
+  if (!row) {
+    return [
+      null,
+      `
+Sorry, I don't think you're verified!
+Use \`!iam <ucla_email_address> <preferred_nickname>\` and verify your email address.`
+    ]
+  }
+
+  try {
+    await db.run(`
+UPDATE
+  users
+SET
+  nickname = ?
+WHERE
+  userid = ?`,
+      [nickname, userid]);
+  } catch (e) {
+    console.error(e.toString());
+    await db.close();
+    return [
+      {message: e.toString()},
+      null
+    ];
+  }
+
+  let server = client.guilds.cache.get(config.server_id);
+  let member = server.members.cache.get(userid);
+  member.setNickname(nickname);
+
+  await db.close();
+  return [
+    null,
+    `Done! Bye bye ${row.nickname} and hello ${nickname}.`
+  ];
+}
+
+// get information on a user
+async function getUser(username, discriminator) {
+  let db = await sqlite.open({
+    filename: config.db_path,
+    driver: sqlite3.Database
+  });
+
+  var row = null;
+  try {
+    row = await db.get(`
+SELECT
+  *
+FROM users
+WHERE
+  username = ? AND
+  discriminator = ?`,
+      [username, discriminator]);
+  } catch (e) {
+    console.error(e.toString());
+    await db.close();
+    return [
+      {message: e.toString()},
+      null
+    ];
+  }
+
+  if (!row) {
+    return [
+      null,
+      'User not found.'
+    ]
+  }
+
+  await db.close();
+  return [
+    null,
+    `
+Nickname: ${row.nickname}
+Email: ${row.email}`
   ];
 }
 
@@ -212,6 +378,61 @@ client.on('message', async msg => {
     if (message) {
       msg.reply(message);
     }
+  }
+
+  // who are you???
+  else if (cmd[0] === '!whoami') {
+    let [err, message] = await checkUser(msg.author.id);
+    if (err) {
+      msg.reply('Something went wrong!\n`'+err.message+'`');
+      return;
+    }
+    if (message) {
+      msg.reply(message);
+    }
+  }
+
+  // set your nickname after verification
+  else if (cmd.length >= 2 && cmd[0] === '!nickname') {
+    let nickname = cmd.slice(1,cmd.length).join(' ');
+    let [err, message] = await setNick(msg.author.id, nickname);
+    if (err) {
+      msg.reply('Something went wrong!\n`'+err.message+'`');
+      return;
+    }
+    if (message) {
+      msg.reply(message);
+    }
+  }
+
+  // lookup a user
+  else if (member.hasPermission('ADMINISTRATOR') && cmd[0] === '!lookup') {
+    if (cmd.length < 2 || !cmd[1].match('.+#([0-9]){4}')) {
+      msg.reply('Invalid command. Format: `!lookup <username>#<discriminator>`');
+      return;
+    }
+
+    let [username, discriminator] = cmd[1].split('#');
+
+    let [err, message] = await getUser(username, discriminator);
+    if (err) {
+      msg.reply('Something went wrong!\n`'+err.message+'`');
+      return;
+    }
+    if (message) {
+      msg.reply(message);
+    }
+
+  }
+
+  else {
+    msg.reply(`
+Invalid command/format.
+Available commands:
+\`!iam <ucla_email_address> <preferred_nickname>\`: request a 6-digit verification code to verify your email address and set your nickname on the server.
+\`!verify <code>\`: verify the code that has been emailed to you.
+\`!whoami\`: check your verified email address.
+\`!nickname\`: change your nickname on the UCLA server.`);
   }
 });
 
