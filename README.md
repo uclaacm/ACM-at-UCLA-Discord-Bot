@@ -44,7 +44,10 @@ Use `config.js` to set the following parameters,
 {
   db_path: '<db_relative_location>',
   allowed_domains: ['domain1.com', 'domain2.com'],
-  server_id: '<discord_server_id>',
+  discord: {
+    server_id: '<discord_server_id>',
+    verified_role_name: 'Verified',
+  }
   sendgrid: {
     template_id: '<dynamic_template_id>',
     sender: '<verified_sender_id>',

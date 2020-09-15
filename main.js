@@ -103,7 +103,7 @@ async function verifyAndAddRole(code, role_name, author) {
     driver: sqlite3.Database
   });
 
-  let server = client.guilds.cache.get(config.server_id);
+  let server = client.guilds.cache.get(config.discord.server_id);
   let role = server.roles.cache.find(role => role.name === role_name);
   let member = server.members.cache.get(author.id);
 
@@ -259,7 +259,7 @@ WHERE
     ];
   }
 
-  let server = client.guilds.cache.get(config.server_id);
+  let server = client.guilds.cache.get(config.discord.server_id);
   let member = server.members.cache.get(userid);
   member.setNickname(nickname);
 
@@ -348,7 +348,7 @@ Available commands:
 client.on('message', async msg => {
   if(msg.author.bot === true || msg.channel.type !== 'dm') { return; }
 
-  let server = client.guilds.cache.get(config.server_id);
+  let server = client.guilds.cache.get(config.discord.server_id);
   let member = server.members.cache.get(msg.author.id);
 
   let cmd = msg.content.split(' ');
@@ -370,7 +370,7 @@ client.on('message', async msg => {
   // verify code
   else if (cmd.length >= 2 && cmd[0] === '!verify') {
     let code = cmd[1];
-    let [err, message] = await verifyAndAddRole(code, 'Verified', msg.author);
+    let [err, message] = await verifyAndAddRole(code, config.discord.verified_role_name, msg.author);
     if (err) {
       msg.reply('Something went wrong!\n`'+err.message+'`');
       return;
@@ -382,7 +382,7 @@ client.on('message', async msg => {
 
   // who are you???
   else if (cmd[0] === '!whoami') {
-    let [err, message] = await checkUser(msg.author.id);
+    let [err, message] = await whoami(msg.author.id);
     if (err) {
       msg.reply('Something went wrong!\n`'+err.message+'`');
       return;
