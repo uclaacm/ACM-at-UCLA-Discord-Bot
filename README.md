@@ -52,4 +52,3 @@ Use `config.js` to set the following parameters,
 }
 ```
 
-
