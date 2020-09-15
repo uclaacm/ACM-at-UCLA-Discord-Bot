@@ -1,6 +1,5 @@
 .env
-credentials.json
 
 node_modules/
 
-db/
+users.db

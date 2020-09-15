@@ -2,6 +2,7 @@ const Discord = require('discord.js');
 const sgMail = require('@sendgrid/mail');
 const sqlite = require('sqlite');
 const sqlite3 = require('sqlite3');
+const config = require('./config');
 
 const client = new Discord.Client();
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
@@ -15,23 +16,34 @@ function genCode(n) {
   return code;
 }
 
-async function verifyAndSendEmail(userid, username, email) {
-  let domain = email.match('^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+\.)?[a-zA-Z]+\.)?(ucla)\.edu$');
+// if email has not been verified, send verification code
+async function verifyAndSendEmail(userid, email, nickname) {
+  let domain = email.match('^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+\.)?[a-zA-Z]+\.)?('+config.allowed_domains.join('|')+')$');
 
-  if (!(domain && domain[1] === 'ucla')) {
+  if (!(domain && config.allowed_domains.includes(domain[1]))) {
     return [
       null,
       'Please enter a valid UCLA email address.'
     ];
   }
 
-  let db = await sqlite.open({
-    filename: './users.db',
+  const db = await sqlite.open({
+    filename: config.db_path,
     driver: sqlite3.Database
   });
 
-  let sql = 'SELECT * FROM users WHERE email = ?';
-  let emailExists = await db.get(sql, [email]);
+  let emailExists = null;
+  try {
+    // TODO: treat .*.ucla.edu the same as ucla.edu for existence check
+    emailExists = await db.get(`SELECT * FROM users WHERE email = ?`, [email]);
+  } catch (e) {
+    console.error(e.toString());
+    await db.close();
+    return [
+      {message: e.toString()},
+      null
+    ];
+  }
 
   if (emailExists) {
     await db.close();
@@ -41,46 +53,76 @@ async function verifyAndSendEmail(userid, username, email) {
     ]
   }
 
-  let code = genCode(6);
+  const code = genCode(6);
 
-  // send email using SendGrid
   const msg = {
     to: email,
-    from: 'rnema@ucla.edu',
-    templateId: 'd-f2190ba3825945a79e24cf06b2fd984c',
+    from: config.sendgrid.sender,
+    templateId: config.sendgrid.template_id,
     dynamic_template_data: {
-      username: username,
+      nickname: nickname,
       code: code,
     },
   };
 
   try {
+    await db.run(`
+INSERT INTO
+  usercodes(userid, email, nickname, code)
+VALUES
+  (?, ?, ?, ?)
+  ON CONFLICT(userid) DO
+  UPDATE
+  SET
+    email = ?,
+    nickname = ?,
+    code = ?,
+    expires_at = DATETIME('now', '+24 hours')`,
+      [userid, email, nickname, code, email, nickname, code]);
     await sgMail.send(msg);
   } catch (e) {
     console.error(e.toString());
+    await db.close();
     return [
       {message: e.toString()},
       null
     ];
   }
 
-  await db.run(`INSERT INTO usercodes(userid, email, code) VALUES(?, ?, ?) ON CONFLICT(userid) DO UPDATE SET email = ?, code = ?, expires_at = DATETIME('now', '+24 hours')`, [userid, email, code, email, code]);
-
   await db.close();
   return [
     null,
-    'Check your email `' + email + '` for a 6-digit verification code. Verify using `!verify <code>`'
+    `Please check your email \`${email}\` for a 6-digit verification code. Verify using \`!verify <code>\``
   ];
 }
 
+// verify code and role to access server
 async function verifyAndAddRole(code, role_name, author) {
   let db = await sqlite.open({
-    filename: './users.db',
+    filename: config.db_path,
     driver: sqlite3.Database
   });
 
-  let sql = `SELECT email FROM usercodes WHERE userid = ? AND code = ? AND expires_at > datetime('now')`;
-  let row = await db.get(sql, [author.id, code]);
+  let server = client.guilds.cache.get(config.server_id);
+  let role = server.roles.cache.find(role => role.name === role_name);
+  let member = server.members.cache.get(author.id);
+
+  if (member.roles.cache.find(role => role.name === role_name)) {
+    return [
+      null,
+      'You\'re already verified!'
+    ]
+  }
+
+  let row = await db.get(`
+SELECT
+  email, nickname
+FROM usercodes
+WHERE
+  userid = ? AND
+  code = ? AND
+  expires_at > datetime('now')`,
+    [author.id, code]);
 
   if (!row) {
     await db.close();
@@ -109,37 +151,58 @@ client.on('ready', async () => {
   console.log(`Logged in as ${client.user.tag}!`);
 
   let db = await sqlite.open({
-    filename: './users.db',
+    filename: config.db_path,
     driver: sqlite3.Database
   });
 
-  await db.exec('CREATE TABLE IF NOT EXISTS usercodes(userid text, email text, code text, expires_at DATE DEFAULT (DATETIME(\'now\', \'+24 hours\')), PRIMARY KEY (userid))');
-  await db.exec('CREATE TABLE IF NOT EXISTS users(userid text, username text, discriminator int, email text, PRIMARY KEY (userid))');
+  await db.exec('CREATE TABLE IF NOT EXISTS usercodes(userid text, email text, nickname text, code text, expires_at DATE DEFAULT (DATETIME(\'now\', \'+24 hours\')), PRIMARY KEY (userid))');
+  await db.exec('CREATE TABLE IF NOT EXISTS users(userid text, username text, discriminator text, nickname text, email text, PRIMARY KEY (userid))');
 
   await db.close();
 });
 
+// on new user, dm him with info and verification instructions
+client.on('guildMemberAdd', member => {
+   member.send(`
+Welcome to ACM at UCLA's Discord Server!
+To access the server please verify yourself using your UCLA email address. Don't worry, this email address will not be linked to your Discord account in any way and is only for moderation purposes.
+You can verify your email and set your nickname by replying with \`!iam <ucla_email_address> <preferred_nickname>\`.
+You will be emailed a 6-digit verification code and you can let me know by \`!verify <code>\`.
+
+Hope to see you soon!
+
+Available commands:
+\`!iam <ucla_email_address> <preferred_nickname>\`: request a 6-digit verification code to verify your email address and set your nickname on the server.
+\`!verify <code>\`: verify the code that has been emailed to you.
+\`!whoami\`: check your verified email address.
+\`!nickname\`: change your nickname on the UCLA server.`);
+});
+
 // on new message
 client.on('message', async msg => {
-  if(msg.author.bot === true) {
-    return;
-  }
-  let cmd = msg.content.split(' ');
-  if (cmd.length != 2) {
-    msg.reply('Invalid command/format.\nUse `!email <ucla_email_address>` to request a 6-digit verification code and,\nUse `!verify <code>` to verify your account!')
-  }
+  if(msg.author.bot === true || msg.channel.type !== 'dm') { return; }
 
-  if (cmd[0] === '!email') {
+  let server = client.guilds.cache.get(config.server_id);
+  let member = server.members.cache.get(msg.author.id);
+
+  let cmd = msg.content.split(' ');
+  if (cmd.length < 1) { return; }
+
+  // verify for the first time
+  if (cmd.length >= 3 && cmd[0] === '!iam') {
     let email = cmd[1].toLowerCase();
-    let [err, message] = await verifyAndSendEmail(msg.author.id, msg.author.username, email);
+    let nickname = cmd.slice(2,cmd.length).join(' ');
+    let [err, message] = await verifyAndSendEmail(msg.author.id, email, nickname);
     if (err) {
       msg.reply('Something went wrong!\n`'+err.message+'`');
     }
     if (message) {
       msg.reply(message);
     }
+  }
 
-  } else if (cmd[0] === '!verify') {
+  // verify code
+  else if (cmd.length >= 2 && cmd[0] === '!verify') {
     let code = cmd[1];
     let [err, message] = await verifyAndAddRole(code, 'Verified', msg.author);
     if (err) {
