@@ -4,7 +4,8 @@
   "description": "ACM at UCLA Discord Server Verification Bot",
   "main": "main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "source .env && node ."
   },
   "author": "entrohpy",
   "repository": {
