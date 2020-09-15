@@ -55,3 +55,11 @@ Use `config.js` to set the following parameters,
 }
 ```
 
+
+
+## Running
+
+```bash
+npm run start
+```
+
