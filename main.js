@@ -259,51 +259,103 @@ WHERE
   member.setNickname(nickname);
 
   await db.close();
-  return [
-    null,
-    `Done! Bye bye ${row.nickname} and hello ${nickname}.`
-  ];
+  return [null, `Done! Bye bye ${row.nickname} and hello ${nickname}.`];
 }
 
 // get information on a user
 async function getUser(username, discriminator) {
   let db = await sqlite.open({
     filename: config.db_path,
-    driver: sqlite3.Database
+    driver: sqlite3.Database,
   });
 
   var row = null;
   try {
-    row = await db.get(`
+    row = await db.get(
+      `
 SELECT
   *
 FROM users
 WHERE
   username = ? AND
   discriminator = ?`,
-      [username, discriminator]);
+      [username, discriminator]
+    );
   } catch (e) {
     console.error(e.toString());
     await db.close();
-    return [
-      {message: e.toString()},
-      null
-    ];
+    return [{ message: e.toString() }, null];
   }
+
+  await db.close();
+
+  if (!row) {
+    return [null, 'User not found.'];
+  }
+
+  return [
+    null,
+    `
+Nickname: ${row.nickname}
+Email: ${row.email}`,
+  ];
+}
+
+async function getMsg(type) {
+  let db = await sqlite.open({
+    filename: config.db_path,
+    driver: sqlite3.Database,
+  });
+
+  let row = null;
+  try {
+    row = await db.get('SELECT message FROM messages WHERE message_id = ?', [type]);
+  } catch (e) {
+    console.error(e.toString());
+    await db.close();
+    return [{ message: e.toString() }, null];
+  }
+
+  await db.close();
 
   if (!row) {
     return [
       null,
-      'User not found.'
-    ]
+      `Message type: ${type} not found`
+    ];
+  }
+
+  return [
+    null,
+    row.message
+  ];
+}
+
+
+async function setWelcomeMsg(type, msg) {
+  let db = await sqlite.open({
+    filename: config.db_path,
+    driver: sqlite3.Database,
+  });
+
+  try {
+    await db.run(`
+UPDATE messages
+SET message = ?
+WHERE
+  message_id = ?`,
+    [msg, type]
+    );
+  } catch (e) {
+    console.error(e.toString());
+    await db.close();
+    return [{ message: e.toString() }, null];
   }
 
   await db.close();
   return [
     null,
-    `
-Nickname: ${row.nickname}
-Email: ${row.email}`
+    `Successfully changed the ${type} message!`
   ];
 }
 
@@ -313,25 +365,35 @@ client.on('ready', async () => {
 
   let db = await sqlite.open({
     filename: config.db_path,
-    driver: sqlite3.Database
+    driver: sqlite3.Database,
   });
 
-  await db.exec('CREATE TABLE IF NOT EXISTS usercodes(userid text, email text, nickname text, code text, expires_at DATE DEFAULT (DATETIME(\'now\', \'+24 hours\')), PRIMARY KEY (userid))');
-  await db.exec('CREATE TABLE IF NOT EXISTS users(userid text, username text, discriminator text, nickname text, email text, PRIMARY KEY (userid))');
+  await db.exec(
+    'CREATE TABLE IF NOT EXISTS usercodes(userid text, email text, nickname text, code text, expires_at DATE DEFAULT (DATETIME(\'now\', \'+24 hours\')), PRIMARY KEY (userid))'
+  );
+  await db.exec(
+    'CREATE TABLE IF NOT EXISTS users(userid text, username text, discriminator text, nickname text, email text, PRIMARY KEY (userid))'
+  );
+
+  await db.exec(
+    'CREATE TABLE IF NOT EXISTS messages(message_id text, message text, PRIMARY KEY (message_id))'
+  );
+
+  await db.run(`INSERT OR IGNORE INTO messages(message_id, message) VALUES ('welcome', '')`);
 
   await db.close();
 });
 
 // on new user, dm him with info and verification instructions
-client.on('guildMemberAdd', member => {
-   member.send(`
-Welcome to ACM at UCLA's Discord Server!
-To access the server please verify yourself using your UCLA email address. Don't worry, this email address will not be linked to your Discord account in any way and is only for moderation purposes.
-You can verify your email and set your nickname by replying with \`!iam <ucla_email_address> <preferred_nickname>\`.
-You will be emailed a 6-digit verification code and you can let me know by \`!verify <code>\`.
+client.on('guildMemberAdd', async (member) => {
+  const db = await sqlite.open({
+    filename: config.db_path,
+    driver: sqlite3.Database,
+  });
+  let {welcome_msg} = await db.get(`SELECT message 'welcome_msg' FROM messages WHERE message_id = ?`, 'welcome');
+  await db.close();
 
-Hope to see you soon!
-
+  member.send(welcome_msg+`
 Available commands:
 \`!iam <ucla_email_address> <preferred_nickname>\`: request a 6-digit verification code to verify your email address and set your nickname on the server.
 \`!verify <code>\`: verify the code that has been emailed to you.
@@ -425,13 +487,57 @@ client.on('message', async (msg) => {
 
     let [err, message] = await getUser(username, discriminator);
     if (err) {
-      msg.reply('Something went wrong!\n`'+err.message+'`');
+      msg.reply('Something went wrong!\n`' + err.message + '`');
       return;
     }
     if (message) {
       msg.reply(message);
     }
+  }
 
+  // get bot messages
+  else if (member.hasPermission('ADMINISTRATOR') && cmd[0] === '!get_message') {
+    if (cmd.length < 2) {
+      msg.reply(
+        'Invalid command. Format: `!get_message <type>`'
+      );
+      return;
+    }
+
+    let [err, message] = await getMsg('welcome');
+    if (err) {
+      msg.reply('Something went wrong!\n`' + err.message + '`');
+      return;
+    }
+    if (message) {
+      msg.reply(message);
+    }
+  }
+
+  // set bot messages
+  else if (member.hasPermission('ADMINISTRATOR') && cmd[0] === '!set_message') {
+    if (cmd.length < 3) {
+      msg.reply(
+        'Invalid command. Format: `!set_message <type> <message_content>`'
+      );
+      return;
+    }
+
+    if (cmd[1] == 'welcome') {
+      let welcome_msg = cmd.slice(2).join(' ');
+      let [err, message] = await setWelcomeMsg('welcome', welcome_msg);
+      if (err) {
+        msg.reply('Something went wrong!\n`' + err.message + '`');
+        return;
+      }
+      if (message) {
+        msg.reply(message);
+      }
+    }
+
+    else {
+      msg.reply('Unsupported message type.');
+    }
   }
 
   else {
