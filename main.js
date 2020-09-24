@@ -9,8 +9,8 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 // generates a n-digit random code
 function genCode(n) {
-  var code = ''
-  for (i = 0; i < n; i++) {
+  let code = '';
+  for (let i = 0; i < n; i++) {
     code += String(Math.floor(Math.random() * 10));
   }
   return code;
@@ -18,39 +18,34 @@ function genCode(n) {
 
 // if email has not been verified, send verification code
 async function verifyAndSendEmail(userid, email, nickname) {
-  let domain = email.match('^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+\.)?[a-zA-Z]+\.)?('+config.allowed_domains.join('|')+')$');
+  let domain = email.match(
+    '^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+.)?[a-zA-Z]+.)?(' +
+      config.allowed_domains.join('|') +
+      ')$'
+  );
 
   if (!(domain && config.allowed_domains.includes(domain[1]))) {
-    return [
-      null,
-      'Please enter a valid UCLA email address.'
-    ];
+    return [null, 'Please enter a valid UCLA email address.'];
   }
 
   const db = await sqlite.open({
     filename: config.db_path,
-    driver: sqlite3.Database
+    driver: sqlite3.Database,
   });
 
   let emailExists = null;
   try {
     // TODO: treat .*.ucla.edu the same as ucla.edu for existence check
-    emailExists = await db.get(`SELECT * FROM users WHERE email = ?`, [email]);
+    emailExists = await db.get('SELECT * FROM users WHERE email = ?', [email]);
   } catch (e) {
     console.error(e.toString());
     await db.close();
-    return [
-      {message: e.toString()},
-      null
-    ];
+    return [{ message: e.toString() }, null];
   }
 
   if (emailExists) {
     await db.close();
-    return [
-      null,
-      'This email has already been verified.'
-    ]
+    return [null, 'This email has already been verified.'];
   }
 
   const code = genCode(6);
@@ -66,7 +61,8 @@ async function verifyAndSendEmail(userid, email, nickname) {
   };
 
   try {
-    await db.run(`
+    await db.run(
+      `
 INSERT INTO
   usercodes(userid, email, nickname, code)
 VALUES
@@ -78,21 +74,19 @@ VALUES
     nickname = ?,
     code = ?,
     expires_at = DATETIME('now', '+24 hours')`,
-      [userid, email, nickname, code, email, nickname, code]);
+      [userid, email, nickname, code, email, nickname, code]
+    );
     await sgMail.send(msg);
   } catch (e) {
     console.error(e.toString());
     await db.close();
-    return [
-      {message: e.toString()},
-      null
-    ];
+    return [{ message: e.toString() }, null];
   }
 
   await db.close();
   return [
     null,
-    `Please check your email \`${email}\` for a 6-digit verification code. Verify using \`!verify <code>\``
+    `Please check your email \`${email}\` for a 6-digit verification code. Verify using \`!verify <code>\``,
   ];
 }
 
@@ -100,21 +94,19 @@ VALUES
 async function verifyAndAddRole(code, role_name, author) {
   let db = await sqlite.open({
     filename: config.db_path,
-    driver: sqlite3.Database
+    driver: sqlite3.Database,
   });
 
   let server = client.guilds.cache.get(config.discord.server_id);
-  let role = server.roles.cache.find(role => role.name === role_name);
+  let role = server.roles.cache.find((role) => role.name === role_name);
   let member = server.members.cache.get(author.id);
 
-  if (member.roles.cache.find(role => role.name === role_name)) {
-    return [
-      null,
-      'You\'re already verified!'
-    ]
+  if (member.roles.cache.find((role) => role.name === role_name)) {
+    return [null, 'You\'re already verified!'];
   }
 
-  let row = await db.get(`
+  let row = await db.get(
+    `
 SELECT
   email, nickname
 FROM usercodes
@@ -122,22 +114,21 @@ WHERE
   userid = ? AND
   code = ? AND
   expires_at > datetime('now')`,
-    [author.id, code]);
+    [author.id, code]
+  );
 
   if (!row) {
     await db.close();
-    return [
-      null,
-      'Invalid/Expired verification code.'
-    ];
+    return [null, 'Invalid/Expired verification code.'];
   }
 
   member.roles.add(role);
   member.setNickname(row.nickname);
 
   try {
-  await db.run(`DELETE FROM usercodes WHERE userid = ?`, [author.id]);
-  await db.run(`
+    await db.run('DELETE FROM usercodes WHERE userid = ?', [author.id]);
+    await db.run(
+      `
 INSERT INTO
   users(userid, username, discriminator, nickname, email)
 VALUES
@@ -147,20 +138,26 @@ VALUES
   SET
     email = ?,
     nickname = ?`,
-      [author.id, author.username, author.discriminator, row.nickname, row.email, row.email, row.nickname]);
+      [
+        author.id,
+        author.username,
+        author.discriminator,
+        row.nickname,
+        row.email,
+        row.email,
+        row.nickname,
+      ]
+    );
   } catch (e) {
     console.error(e.toString());
     await db.close();
-    return [
-      {message: e.toString()},
-      null
-    ];
+    return [{ message: e.toString() }, null];
   }
 
   await db.close();
   return [
     null,
-    `Thanks ${row.nickname}! You have now been verified and can access the server!`
+    `Thanks ${row.nickname}! You have now been verified and can access the server!`,
   ];
 }
 
@@ -168,42 +165,42 @@ VALUES
 async function whoami(userid) {
   let db = await sqlite.open({
     filename: config.db_path,
-    driver: sqlite3.Database
+    driver: sqlite3.Database,
   });
 
   var row = null;
   try {
-    row = await db.get(`
+    row = await db.get(
+      `
 SELECT
   nickname, email
 FROM users
 WHERE
   userid = ?`,
-      [userid]);
+      [userid]
+    );
   } catch (e) {
     console.error(e.toString());
     await db.close();
-    return [
-      {message: e.toString()},
-      null
-    ];
+    return [{ message: e.toString() }, null];
   }
+
+  await db.close();
 
   if (!row) {
     return [
       null,
       `
 Hmmm I'm really not sure myself but I'd love to get to know you!
-Use \`!iam <ucla_email_address> <preferred_nickname>\` and verify your email address.`
-    ]
+Use \`!iam <ucla_email_address> <preferred_nickname>\` and verify your email address.`,
+    ];
   }
 
-  await db.close();
   return [
     null,
     `
 Why, you're ${row.nickname} of course!
-Your verified email address is ${row.email}`
+Your verified email address is ${row.email}`,
   ];
 }
 
@@ -211,25 +208,24 @@ Your verified email address is ${row.email}`
 async function setNick(userid, nickname) {
   let db = await sqlite.open({
     filename: config.db_path,
-    driver: sqlite3.Database
+    driver: sqlite3.Database,
   });
 
   var row = null;
   try {
-    row = await db.get(`
+    row = await db.get(
+      `
 SELECT
   nickname, userid
 FROM users
 WHERE
   userid = ?`,
-      [userid]);
+      [userid]
+    );
   } catch (e) {
     console.error(e.toString());
     await db.close();
-    return [
-      {message: e.toString()},
-      null
-    ];
+    return [{ message: e.toString() }, null];
   }
 
   if (!row) {
@@ -237,26 +233,25 @@ WHERE
       null,
       `
 Sorry, I don't think you're verified!
-Use \`!iam <ucla_email_address> <preferred_nickname>\` and verify your email address.`
-    ]
+Use \`!iam <ucla_email_address> <preferred_nickname>\` and verify your email address.`,
+    ];
   }
 
   try {
-    await db.run(`
+    await db.run(
+      `
 UPDATE
   users
 SET
   nickname = ?
 WHERE
   userid = ?`,
-      [nickname, userid]);
+      [nickname, userid]
+    );
   } catch (e) {
     console.error(e.toString());
     await db.close();
-    return [
-      {message: e.toString()},
-      null
-    ];
+    return [{ message: e.toString() }, null];
   }
 
   let server = client.guilds.cache.get(config.discord.server_id);
@@ -345,22 +340,30 @@ Available commands:
 });
 
 // on new message
-client.on('message', async msg => {
-  if(msg.author.bot === true || msg.channel.type !== 'dm') { return; }
+client.on('message', async (msg) => {
+  if (msg.author.bot === true || msg.channel.type !== 'dm') {
+    return;
+  }
 
   let server = client.guilds.cache.get(config.discord.server_id);
   let member = server.members.cache.get(msg.author.id);
 
   let cmd = msg.content.split(' ');
-  if (cmd.length < 1) { return; }
+  if (cmd.length < 1) {
+    return;
+  }
 
   // verify for the first time
   if (cmd.length >= 3 && cmd[0] === '!iam') {
     let email = cmd[1].toLowerCase();
-    let nickname = cmd.slice(2,cmd.length).join(' ');
-    let [err, message] = await verifyAndSendEmail(msg.author.id, email, nickname);
+    let nickname = cmd.slice(2, cmd.length).join(' ');
+    let [err, message] = await verifyAndSendEmail(
+      msg.author.id,
+      email,
+      nickname
+    );
     if (err) {
-      msg.reply('Something went wrong!\n`'+err.message+'`');
+      msg.reply('Something went wrong!\n`' + err.message + '`');
     }
     if (message) {
       msg.reply(message);
@@ -370,9 +373,13 @@ client.on('message', async msg => {
   // verify code
   else if (cmd.length >= 2 && cmd[0] === '!verify') {
     let code = cmd[1];
-    let [err, message] = await verifyAndAddRole(code, config.discord.verified_role_name, msg.author);
+    let [err, message] = await verifyAndAddRole(
+      code,
+      config.discord.verified_role_name,
+      msg.author
+    );
     if (err) {
-      msg.reply('Something went wrong!\n`'+err.message+'`');
+      msg.reply('Something went wrong!\n`' + err.message + '`');
       return;
     }
     if (message) {
@@ -384,7 +391,7 @@ client.on('message', async msg => {
   else if (cmd[0] === '!whoami') {
     let [err, message] = await whoami(msg.author.id);
     if (err) {
-      msg.reply('Something went wrong!\n`'+err.message+'`');
+      msg.reply('Something went wrong!\n`' + err.message + '`');
       return;
     }
     if (message) {
@@ -394,10 +401,10 @@ client.on('message', async msg => {
 
   // set your nickname after verification
   else if (cmd.length >= 2 && cmd[0] === '!nickname') {
-    let nickname = cmd.slice(1,cmd.length).join(' ');
+    let nickname = cmd.slice(1).join(' ');
     let [err, message] = await setNick(msg.author.id, nickname);
     if (err) {
-      msg.reply('Something went wrong!\n`'+err.message+'`');
+      msg.reply('Something went wrong!\n`' + err.message + '`');
       return;
     }
     if (message) {
@@ -408,7 +415,9 @@ client.on('message', async msg => {
   // lookup a user
   else if (member.hasPermission('ADMINISTRATOR') && cmd[0] === '!lookup') {
     if (cmd.length < 2 || !cmd[1].match('.+#([0-9]){4}')) {
-      msg.reply('Invalid command. Format: `!lookup <username>#<discriminator>`');
+      msg.reply(
+        'Invalid command. Format: `!lookup <username>#<discriminator>`'
+      );
       return;
     }
 
@@ -437,4 +446,3 @@ Available commands:
 });
 
 client.login(process.env.DISCORD_API_KEY);
-
