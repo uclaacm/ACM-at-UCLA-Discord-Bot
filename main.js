@@ -57,6 +57,7 @@ async function verifyAndSendEmail(userid, email, nickname) {
     dynamic_template_data: {
       nickname: nickname,
       code: code,
+      email: email
     },
   };
 
