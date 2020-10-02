@@ -15,6 +15,7 @@ Verified usernames are stored with their email address in an `sqlite3` database 
 - create a dynamic template with the following handlebars
   - `{{nickname}}`
   - `{{code}}`
+  - `{{email}}`
 
 
 
