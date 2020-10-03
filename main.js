@@ -455,7 +455,7 @@ Available commands:
 \`!iam <ucla_email_address> <preferred_name>\`: request a 6-digit verification code to verify your email address and set your nickname on the server. Note: \`preferred_name can be multiple words\`
 \`!verify <code>\`: verify the code that has been emailed to you.
 \`!whoami\`: check your verified email address.
-\`!name\`: change your nickname on the server.`);
+\`!name <preferred_name>\`: change your nickname on the server.`);
 });
 
 // on new message
@@ -612,7 +612,7 @@ Available commands:
 \`!iam <ucla_email_address> <preferred_name>\`: request a 6-digit verification code to verify your email address and set your nickname on the server.
 \`!verify <code>\`: verify the code that has been emailed to you.
 \`!whoami\`: check your verified email address.
-\`!name\`: change your nickname on the server.`);
+\`!name <preferred_name>\`: change your nickname on the server.`);
   }
 });
 
