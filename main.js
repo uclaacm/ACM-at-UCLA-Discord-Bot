@@ -409,14 +409,30 @@ client.on('ready', async () => {
   });
 
   await db.exec(
-    'CREATE TABLE IF NOT EXISTS usercodes(userid text, email text, nickname text, code text, expires_at DATE DEFAULT (DATETIME(\'now\', \'+24 hours\')), PRIMARY KEY (userid))'
+    `CREATE TABLE IF NOT EXISTS
+      usercodes(userid      text,
+                email       text,
+                nickname    text,
+                code        text,
+                expires_at  DATE DEFAULT (DATETIME('now', '+24 hours')),
+      PRIMARY KEY (userid))`
   );
   await db.exec(
-    'CREATE TABLE IF NOT EXISTS users(userid text, username text, discriminator text, nickname text, email text, PRIMARY KEY (userid))'
+    `CREATE TABLE IF NOT EXISTS
+      users(userid        text,
+            username      text,
+            discriminator text,
+            nickname      text,
+            email         text,
+            verified_at   DATE DEFAULT (DATETIME('now')),
+      PRIMARY KEY (userid))`
   );
 
   await db.exec(
-    'CREATE TABLE IF NOT EXISTS messages(message_id text, message text, PRIMARY KEY (message_id))'
+    `CREATE TABLE IF NOT EXISTS
+      messages(message_id text,
+               message    text,
+      PRIMARY KEY (message_id))`
   );
 
   await db.run(`INSERT OR IGNORE INTO messages(message_id, message) VALUES ('welcome', '')`);
