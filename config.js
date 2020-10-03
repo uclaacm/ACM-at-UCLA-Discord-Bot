@@ -1,5 +1,5 @@
 module.exports = {
-  db_path: './users.db',
+  db_path: './userinfo.db',
   allowed_domains: ['ucla.edu'],
   discord: {
     server_id: '702801010426511373',

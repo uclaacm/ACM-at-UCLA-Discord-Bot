@@ -45,7 +45,7 @@ async function verifyAndSendEmail(userid, email, nickname) {
 
   if (emailExists) {
     await db.close();
-    return [null, 'This email has already been verified.'];
+    return [null, 'This email has already been verified. If you own this email address, please contact any of the Moderators.'];
   }
 
   const code = genCode(6);
@@ -120,7 +120,7 @@ WHERE
 
   if (!row) {
     await db.close();
-    return [null, 'Invalid/Expired verification code.'];
+    return [null, 'Sorry, this code is either invalid/expired.'];
   }
 
   member.roles.add(role);
@@ -193,7 +193,7 @@ WHERE
       null,
       `
 Hmmm I'm really not sure myself but I'd love to get to know you!
-Use \`!iam <ucla_email_address> <preferred_nickname>\` and verify your email address.`,
+Use \`!iam <ucla_email_address> <preferred_name>\` and verify your email address.`,
     ];
   }
 
@@ -233,8 +233,8 @@ WHERE
     return [
       null,
       `
-Sorry, I don't think you're verified!
-Use \`!iam <ucla_email_address> <preferred_nickname>\` and verify your email address.`,
+Sorry, I don't think you're verified! You must be verified to change your name on the server.
+Use \`!iam <ucla_email_address> <preferred_name>\` and verify your email address.`,
     ];
   }
 
@@ -396,10 +396,10 @@ client.on('guildMemberAdd', async (member) => {
 
   member.send(welcome_msg+`
 Available commands:
-\`!iam <ucla_email_address> <preferred_nickname>\`: request a 6-digit verification code to verify your email address and set your nickname on the server.
+\`!iam <ucla_email_address> <preferred_name>\`: request a 6-digit verification code to verify your email address and set your nickname on the server. Note: \`preferred_name can be multiple words\`
 \`!verify <code>\`: verify the code that has been emailed to you.
 \`!whoami\`: check your verified email address.
-\`!nickname\`: change your nickname on the UCLA server.`);
+\`!name\`: change your nickname on the server.`);
 });
 
 // on new message
@@ -463,7 +463,7 @@ client.on('message', async (msg) => {
   }
 
   // set your nickname after verification
-  else if (cmd.length >= 2 && cmd[0] === '!nickname') {
+  else if (cmd.length >= 2 && cmd[0] === '!name') {
     let nickname = cmd.slice(1).join(' ');
     let [err, message] = await setNick(msg.author.id, nickname);
     if (err) {
@@ -545,10 +545,10 @@ client.on('message', async (msg) => {
     msg.reply(`
 Invalid command/format.
 Available commands:
-\`!iam <ucla_email_address> <preferred_nickname>\`: request a 6-digit verification code to verify your email address and set your nickname on the server.
+\`!iam <ucla_email_address> <preferred_name>\`: request a 6-digit verification code to verify your email address and set your nickname on the server.
 \`!verify <code>\`: verify the code that has been emailed to you.
 \`!whoami\`: check your verified email address.
-\`!nickname\`: change your nickname on the UCLA server.`);
+\`!name\`: change your nickname on the server.`);
   }
 });
 
