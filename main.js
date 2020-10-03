@@ -435,7 +435,8 @@ client.on('ready', async () => {
       PRIMARY KEY (message_id))`
   );
 
-  await db.run(`INSERT OR IGNORE INTO messages(message_id, message) VALUES ('welcome', '')`);
+  let welcome_msg = config.default_msgs.welcome;
+  await db.run(`INSERT OR IGNORE INTO messages(message_id, message) VALUES ('welcome', ${welcome_msg})`);
 
   await db.close();
 });

@@ -9,4 +9,7 @@ module.exports = {
     template_id: 'd-b50eca776df84deab80256f097286492',
     sender: 'acm@ucla.edu',
   },
+  default_msgs: {
+    welcome: 'Welcome to the official ACM at UCLA Discord server.',
+  }
 };
