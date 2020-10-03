@@ -263,8 +263,8 @@ WHERE
   return [null, `Done! Bye bye ${row.nickname} and hello ${nickname}.`];
 }
 
-// get information on a user
-async function getUser(username, discriminator) {
+// get information on a user by discord username (note: users can change this)
+async function getUserByUsername(username, discriminator) {
   let db = await sqlite.open({
     filename: config.db_path,
     driver: sqlite3.Database,
@@ -297,6 +297,45 @@ WHERE
   return [
     null,
     `
+Nickname: ${row.nickname}
+Email: ${row.email}`,
+  ];
+}
+
+// get information on a user by discord username (note: users can change this)
+async function getUserById(userid) {
+  let db = await sqlite.open({
+    filename: config.db_path,
+    driver: sqlite3.Database,
+  });
+
+  var row = null;
+  try {
+    row = await db.get(
+      `
+SELECT
+  *
+FROM users
+WHERE
+  userid = ?`,
+      [userid]
+    );
+  } catch (e) {
+    console.error(e.toString());
+    await db.close();
+    return [{ message: e.toString() }, null];
+  }
+
+  await db.close();
+
+  if (!row) {
+    return [null, 'User not found.'];
+  }
+
+  return [
+    null,
+    `
+userid: ${userid}
 Nickname: ${row.nickname}
 Email: ${row.email}`,
   ];
@@ -476,17 +515,25 @@ client.on('message', async (msg) => {
   }
 
   // lookup a user
-  else if (member.hasPermission('ADMINISTRATOR') && cmd[0] === '!lookup') {
-    if (cmd.length < 2 || !cmd[1].match('.+#([0-9]){4}')) {
+  else if ((member.hasPermission('ADMINISTRATOR') || member.hasPermission('MODERATOR')) && cmd[0] === '!lookup') {
+    if (cmd.length < 2) {
       msg.reply(
-        'Invalid command. Format: `!lookup <username>#<discriminator>`'
+        'Invalid command. Format: `!lookup (<username>#<discriminator> | <userid>)`'
       );
       return;
     }
 
-    let [username, discriminator] = cmd[1].split('#');
+    let [err, message] = [null, null];
 
-    let [err, message] = await getUser(username, discriminator);
+    if (cmd[1].match('.+#([0-9]){4}')) {
+      let [username, discriminator] = cmd[1].split('#');
+      [err, message] = await getUserByUsername(username, discriminator);
+    }
+
+    else {
+      [err, message] = await getUserById(cmd[1]);
+    }
+
     if (err) {
       msg.reply('Something went wrong!\n`' + err.message + '`');
       return;
