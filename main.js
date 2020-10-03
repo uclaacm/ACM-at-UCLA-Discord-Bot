@@ -532,7 +532,7 @@ client.on('message', async (msg) => {
   }
 
   // lookup a user
-  else if ((member.hasPermission('ADMINISTRATOR') || member.hasPermission('MODERATOR')) && cmd[0] === '!lookup') {
+  else if (member.hasPermission('ADMINISTRATOR') && cmd[0] === '!lookup') {
     if (cmd.length < 2) {
       msg.reply(
         'Invalid command. Format: `!lookup (<username>#<discriminator> | <userid>)`'
