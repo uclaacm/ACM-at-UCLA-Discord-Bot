@@ -510,6 +510,7 @@ WHERE
     `
 Userid: ${row.userid}
 Nickname: ${row.nickname}
+Pronouns: ${row.pronouns}
 Email: ${row.email}
 Affiliation: ${row.affiliation}
 Major: ${row.major}
@@ -556,6 +557,7 @@ WHERE
     `
 Userid: ${row.userid}
 Nickname: ${row.nickname}
+Pronouns: ${row.pronouns}
 Email: ${row.email}
 Affiliation: ${row.affiliation}
 Major: ${row.major}
@@ -624,6 +626,75 @@ WHERE
   return [
     null,
     `Successfully changed the ${type} message!`
+  ];
+}
+
+async function updateUserNickname(userid, nickname) {
+  if (nickname.length > 19) {
+    return [null, 'Please enter a shorter name (max 19 characters).'];
+  }
+
+  let db = await sqlite.open({
+    filename: config.db_path,
+    driver: sqlite3.Database,
+  });
+
+  let row = null;
+  try {
+    row = await db.get(
+      `
+SELECT
+  userid, pronouns, nickname
+FROM users
+WHERE
+  userid = ?`,
+      [userid]
+    );
+  } catch (e) {
+    console.error(e.toString());
+    await db.close();
+    return [{ message: e.toString() }, null];
+  }
+
+  if (!row) {
+    return [
+      null,
+      `
+Invalid/unverified user.`,
+    ];
+  }
+
+  try {
+    await db.run(
+      `
+UPDATE
+  users
+SET
+  nickname = ?
+WHERE
+  userid = ?`,
+      [nickname, userid]
+    );
+  } catch (e) {
+    console.error(e.toString());
+    await db.close();
+    return [{ message: e.toString() }, null];
+  }
+
+  let server = client.guilds.cache.get(config.discord.server_id);
+  let member = server.members.cache.get(userid);
+  if (member) {
+    return [
+      null,
+      `User not found.`
+    ];
+  }
+  member.setNickname(`${nickname} (${row.pronouns})`);
+
+  await db.close();
+  return [
+    null,
+    `Successfully changed: ${row.nickname} -> ${nickname}.`
   ];
 }
 
@@ -889,7 +960,7 @@ client.on('message', async (msg) => {
 
     if (args[0] === 'welcome') {
       let welcome_msg = args.slice(1).join(' ');
-      let [err, message] = await setWelcomeMsg('welcome', welcome_msg);
+      let [err, message] = await setMsg('welcome', welcome_msg);
       if (err) {
         msg.reply('Something went wrong!\n`' + err.message + '`');
         return;
@@ -904,6 +975,24 @@ client.on('message', async (msg) => {
     }
   }
 
+  else if (command === 'name' && member.hasPermission('ADMINISTRATOR')) {
+    if (args.length < 2) {
+      msg.reply(
+        'Invalid command format. Format: `!name <userid> <new_name>`'
+      );
+      return;
+    }
+    let userid = args[0];
+    let nickname = args.slice(1).join(' ');
+    let [err, message] = await updateUserNickname(userid, nickname);
+    if (err) {
+      msg.reply('Something went wrong!\n`' + err.message + '`');
+      return;
+    }
+    if (message) {
+      msg.reply(message);
+    }
+  }
   else {
     msg.reply(`
 Invalid command/format.
