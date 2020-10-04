@@ -17,6 +17,7 @@ function genCode(n) {
 }
 
 // if email has not been verified, send verification code
+// linked to IAM command
 async function verifyAndSendEmail(userid, email, nickname, affiliation) {
   let domain = email.match(
     '^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+.)?[a-zA-Z]+.)?(' +
@@ -100,7 +101,8 @@ VALUES
   ];
 }
 
-// verify code and role to access server
+// verify code and and role to access server
+// linked to VERIFY command
 async function verifyAndAddRole(code, role_name, author) {
   let db = await sqlite.open({
     filename: config.db_path,
@@ -178,6 +180,8 @@ VALUES
   ];
 }
 
+// add pronouns to nickname
+// linked to PRONOUNS command
 async function setPronouns(userid, pronouns) {
   if (pronouns.length > 10) {
     return [null, 'Please enter something shorter (max 10 characters).'];
@@ -242,6 +246,8 @@ Thank you for making the server more inclusive!`
   ];
 }
 
+// add major in database record
+// linked to MAJOR command
 async function setMajor(userid, major) {
   let db = await sqlite.open({
     filename: config.db_path,
@@ -298,6 +304,8 @@ WHERE
   ];
 }
 
+// add year in database record
+// linked to YEAR command
 async function setYear(userid, year) {
   if(!year.match('(?:(?:19|20)[0-9]{2})')) {
     return [null, 'Please enter a valid graduation year.']
@@ -359,6 +367,8 @@ WHERE
 
 }
 
+// toggle transfer student flag
+// linked to TRANSFER command
 async function toggleTransfer(userid) {
   let db = await sqlite.open({
     filename: config.db_path,
@@ -416,6 +426,7 @@ WHERE
 }
 
 // who are you???
+// linked to WHOAMI command
 async function whoami(userid) {
   let db = await sqlite.open({
     filename: config.db_path,
@@ -458,68 +469,9 @@ Your verified email address is ${row.email}`,
   ];
 }
 
-// set nickname after verification
-/*
-async function setNick(userid, nickname) {
-  let db = await sqlite.open({
-    filename: config.db_path,
-    driver: sqlite3.Database,
-  });
-
-  var row = null;
-  try {
-    row = await db.get(
-      `
-SELECT
-  nickname, userid
-FROM users
-WHERE
-  userid = ?`,
-      [userid]
-    );
-  } catch (e) {
-    console.error(e.toString());
-    await db.close();
-    return [{ message: e.toString() }, null];
-  }
-
-  if (!row) {
-    return [
-      null,
-      `
-Sorry, I don't think you're verified! You must be verified to change your name on the server.
-Use \`!iam <ucla_email_address> <preferred_name>\` and verify your email address.`,
-    ];
-  }
-
-  try {
-    await db.run(
-      `
-UPDATE
-  users
-SET
-  nickname = ?
-WHERE
-  userid = ?`,
-      [nickname, userid]
-    );
-  } catch (e) {
-    console.error(e.toString());
-    await db.close();
-    return [{ message: e.toString() }, null];
-  }
-
-  let server = client.guilds.cache.get(config.discord.server_id);
-  let member = server.members.cache.get(userid);
-  member.setNickname(nickname);
-
-  await db.close();
-  return [null, `Done! Bye bye ${row.nickname} and hello ${nickname}.`];
-}
-*/
-
 // get information on a user by discord username (note: users can change this)
 // only `userid` is invariant. Use getUserById
+// linked to LOOKUP command
 async function getUserByUsername(username, discriminator) {
   let db = await sqlite.open({
     filename: config.db_path,
@@ -566,6 +518,7 @@ Verified at: ${row.verified_at}
 }
 
 // get information on a user by discord username (note: users can change this)
+// linked to LOOKUP command
 async function getUserById(userid) {
   let db = await sqlite.open({
     filename: config.db_path,
@@ -610,6 +563,8 @@ Verified at: ${row.verified_at}
   ];
 }
 
+// get message content of specific type
+// linked to GET_MESSAGE command
 async function getMsg(type) {
   let db = await sqlite.open({
     filename: config.db_path,
@@ -640,7 +595,9 @@ async function getMsg(type) {
   ];
 }
 
-async function setWelcomeMsg(type, msg) {
+// set message of specific type
+// linked to SET_MESSAGE command
+async function setMsg(type, msg) {
   let db = await sqlite.open({
     filename: config.db_path,
     driver: sqlite3.Database,
@@ -869,21 +826,6 @@ client.on('message', async (msg) => {
       msg.reply(message);
     }
   }
-
-  // set your nickname after verification
-  /* currently disabling name change after verification
-  else if (cmd.length >= 2 && cmd[0] === '!name') {
-    let nickname = cmd.slice(1).join(' ');
-    let [err, message] = await setNick(msg.author.id, nickname);
-    if (err) {
-      msg.reply('Something went wrong!\n`' + err.message + '`');
-      return;
-    }
-    if (message) {
-      msg.reply(message);
-    }
-  }
-  */
 
   // LOOKUP: [ADMIN] lookup a user by id or username#disc
   else if (member.hasPermission('ADMINISTRATOR') && command === 'lookup') {
