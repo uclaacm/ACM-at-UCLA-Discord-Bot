@@ -1,3 +1,3 @@
 #!/bin/bash
 
-. .env && node .
+. .env && pm2 start main.js --name discord_bot
