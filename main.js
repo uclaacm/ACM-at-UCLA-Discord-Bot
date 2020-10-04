@@ -24,7 +24,11 @@ async function verifyAndSendEmail(userid, email, nickname, affiliation) {
       ')$'
   );
   if (!(domain && config.allowed_domains.includes(domain[1]))) {
-    return [null, 'Please enter a valid UCLA email address (example@cs.ucla.edu)'];
+    return [null, 'Please enter a valid UCLA email address (example@cs.ucla.edu).'];
+  }
+
+  if (nickname.length >= 20) {
+    return [null, 'Please enter a shorter name (less than 20 characters).'];
   }
 
   let affil_key = config.affiliation_map[affiliation];
@@ -175,6 +179,9 @@ VALUES
 }
 
 async function setPronouns(userid, pronouns) {
+  if (pronouns.length >= 11) {
+    return [null, 'Please enter a shorter string (10 characters or less).'];
+  }
   let db = await sqlite.open({
     filename: config.db_path,
     driver: sqlite3.Database,
