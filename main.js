@@ -249,6 +249,9 @@ Thank you for making the server more inclusive!`
 // add major in database record
 // linked to MAJOR command
 async function setMajor(userid, major) {
+  if (!config.majors_list.includes(major)) {
+    return [null, 'Sorry, I don\'t recognize your major! Please refer to https://catalog.registrar.ucla.edu/ucla-catalog20-21-5.html for valid major names (e.g. Computer Science)'];
+  }
   let db = await sqlite.open({
     filename: config.db_path,
     driver: sqlite3.Database,
