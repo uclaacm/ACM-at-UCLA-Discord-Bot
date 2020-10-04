@@ -174,6 +174,67 @@ VALUES
   ];
 }
 
+async function setPronouns(userid, pronouns) {
+  let db = await sqlite.open({
+    filename: config.db_path,
+    driver: sqlite3.Database,
+  });
+
+  let row = null;
+  try {
+    row = await db.get(
+      `
+SELECT
+  userid, nickname
+FROM users
+WHERE
+  userid = ?`,
+      [userid]
+    );
+  } catch (e) {
+    console.error(e.toString());
+    await db.close();
+    return [{ message: e.toString() }, null];
+  }
+
+  if (!row) {
+    return [
+      null,
+      `
+Sorry, I don't think you're verified!.
+Use \`!iam <ucla_email_address> <preferred_name>\` and verify your email address.`,
+    ];
+  }
+
+  try {
+    await db.run(
+      `
+UPDATE
+  users
+SET
+  pronouns = ?
+WHERE
+  userid = ?`,
+      [pronouns, userid]
+    );
+  } catch (e) {
+    console.error(e.toString());
+    await db.close();
+    return [{ message: e.toString() }, null];
+  }
+
+  let server = client.guilds.cache.get(config.discord.server_id);
+  let member = server.members.cache.get(userid);
+  member.setNickname(`${row.nickname} (${pronouns})`);
+
+  await db.close();
+  return [
+    null,
+    `Successfully added your pronouns (${pronouns}) to your name in the server.
+Thank you for making the server more inclusive!`
+  ];
+}
+
 // who are you???
 async function whoami(userid) {
   let db = await sqlite.open({
@@ -541,6 +602,17 @@ client.on('message', async (msg) => {
     }
   }
 
+  else if (cmd.length >= 2 && cmd[0] === '!pronouns') {
+    let pronouns = cmd.slice(1, cmd.length).join(' ').toLowerCase();
+    let [err, message] = await setPronouns(msg.author.id, pronouns);
+    if (err) {
+      msg.reply('Something went wrong!\n`' + err.message + '`');
+    }
+    if (message) {
+      msg.reply(message);
+    }
+  }
+
   // who are you???
   else if (cmd[0] === '!whoami') {
     let [err, message] = await whoami(msg.author.id);
@@ -554,6 +626,7 @@ client.on('message', async (msg) => {
   }
 
   // set your nickname after verification
+  /* currently disabling name change after verification
   else if (cmd.length >= 2 && cmd[0] === '!name') {
     let nickname = cmd.slice(1).join(' ');
     let [err, message] = await setNick(msg.author.id, nickname);
@@ -565,6 +638,7 @@ client.on('message', async (msg) => {
       msg.reply(message);
     }
   }
+  */
 
   // lookup a user
   else if (member.hasPermission('ADMINISTRATOR') && cmd[0] === '!lookup') {
