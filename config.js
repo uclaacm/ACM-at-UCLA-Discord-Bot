@@ -1,6 +1,12 @@
 module.exports = {
+  cmd_prefix: '!',
   db_path: './userinfo.db',
   allowed_domains: ['ucla.edu'],
+  affiliation_map: {
+    student: 's',
+    alumni: 'a',
+    other: 'o',
+  },
   discord: {
     server_id: '702801010426511373',
     verified_role_name: 'Verified',
