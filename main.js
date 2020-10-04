@@ -235,6 +235,175 @@ Thank you for making the server more inclusive!`
   ];
 }
 
+async function setMajor(userid, major) {
+  let db = await sqlite.open({
+    filename: config.db_path,
+    driver: sqlite3.Database,
+  });
+
+  let row = null;
+  try {
+    row = await db.get(
+      `
+SELECT
+  userid, major
+FROM users
+WHERE
+  userid = ?`,
+      [userid]
+    );
+  } catch (e) {
+    console.error(e.toString());
+    await db.close();
+    return [{ message: e.toString() }, null];
+  }
+
+  if (!row) {
+    return [
+      null,
+      `
+Sorry, I don't think you're verified!.
+Use \`!iam <ucla_email_address> <preferred_name>\` and verify your email address.`,
+    ];
+  }
+
+  try {
+    await db.run(
+      `
+UPDATE
+  users
+SET
+  major = ?
+WHERE
+  userid = ?`,
+      [major, userid]
+    );
+  } catch (e) {
+    console.error(e.toString());
+    await db.close();
+    return [{ message: e.toString() }, null];
+  }
+
+  await db.close();
+  return [
+    null,
+    `Successfully added your major (${major}). Thank you!`
+  ];
+}
+
+async function setYear(userid, year) {
+  let db = await sqlite.open({
+    filename: config.db_path,
+    driver: sqlite3.Database,
+  });
+
+  let row = null;
+  try {
+    row = await db.get(
+      `
+SELECT
+  userid, grad_year
+FROM users
+WHERE
+  userid = ?`,
+      [userid]
+    );
+  } catch (e) {
+    console.error(e.toString());
+    await db.close();
+    return [{ message: e.toString() }, null];
+  }
+
+  if (!row) {
+    return [
+      null,
+      `
+Sorry, I don't think you're verified!.
+Use \`!iam <ucla_email_address> <preferred_name>\` and verify your email address.`,
+    ];
+  }
+
+  try {
+    await db.run(
+      `
+UPDATE
+  users
+SET
+  grad_year = ?
+WHERE
+  userid = ?`,
+      [year, userid]
+    );
+  } catch (e) {
+    console.error(e.toString());
+    await db.close();
+    return [{ message: e.toString() }, null];
+  }
+
+  await db.close();
+  return [
+    null,
+    `Successfully added your graduation year (${year}). Thank you!`
+  ];
+
+}
+
+async function toggleTransfer(userid) {
+  let db = await sqlite.open({
+    filename: config.db_path,
+    driver: sqlite3.Database,
+  });
+
+  let row = null;
+  try {
+    row = await db.get(
+      `
+SELECT
+  userid, transfer_flag
+FROM users
+WHERE
+  userid = ?`,
+      [userid]
+    );
+  } catch (e) {
+    console.error(e.toString());
+    await db.close();
+    return [{ message: e.toString() }, null];
+  }
+
+  if (!row) {
+    return [
+      null,
+      `
+Sorry, I don't think you're verified!.
+Use \`!iam <ucla_email_address> <preferred_name>\` and verify your email address.`,
+    ];
+  }
+
+  try {
+    await db.run(
+      `
+UPDATE
+  users
+SET
+  transfer_flag = ?
+WHERE
+  userid = ?`,
+      [row.transfer_flag == 1 ? 0 : 1, userid]
+    );
+  } catch (e) {
+    console.error(e.toString());
+    await db.close();
+    return [{ message: e.toString() }, null];
+  }
+
+  await db.close();
+  return [
+    null,
+    `Successfully ${row.transfer_flag == 1 ? 'un' : ''}marked you as a transfer student. Thank you!`
+  ];
+}
+
 // who are you???
 async function whoami(userid) {
   let db = await sqlite.open({
@@ -605,6 +774,38 @@ client.on('message', async (msg) => {
   else if (cmd.length >= 2 && cmd[0] === '!pronouns') {
     let pronouns = cmd.slice(1, cmd.length).join(' ').toLowerCase();
     let [err, message] = await setPronouns(msg.author.id, pronouns);
+    if (err) {
+      msg.reply('Something went wrong!\n`' + err.message + '`');
+    }
+    if (message) {
+      msg.reply(message);
+    }
+  }
+
+  else if (cmd.length >= 2 && cmd[0] === '!major') {
+    let major = cmd.slice(1, cmd.length).join(' ').toLowerCase();
+    let [err, message] = await setMajor(msg.author.id, major);
+    if (err) {
+      msg.reply('Something went wrong!\n`' + err.message + '`');
+    }
+    if (message) {
+      msg.reply(message);
+    }
+  }
+
+  else if (cmd.length >= 2 && cmd[0] === '!year') {
+    let year = cmd[1];
+    let [err, message] = await setYear(msg.author.id, year);
+    if (err) {
+      msg.reply('Something went wrong!\n`' + err.message + '`');
+    }
+    if (message) {
+      msg.reply(message);
+    }
+  }
+
+  else if (cmd.length >= 1 && cmd[0] === '!transfer') {
+    let [err, message] = await toggleTransfer(msg.author.id);
     if (err) {
       msg.reply('Something went wrong!\n`' + err.message + '`');
     }
