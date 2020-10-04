@@ -752,11 +752,47 @@ client.on('guildMemberAdd', async (member) => {
     filename: config.db_path,
     driver: sqlite3.Database,
   });
-  let {welcome_msg} = await db.get(`SELECT message 'welcome_msg' FROM messages WHERE message_id = ?`, 'welcome');
+
+  let welcome_msg = null;
+  let row = null;
+
+  try {
+    let {message} = await db.get(`SELECT message FROM messages WHERE message_id = ?`, 'welcome');
+    welcome_msg = message;
+    row = await db.get(`SELECT * FROM users WHERE userid = ?`, [member.id])
+  } catch (e) {
+    console.error(e.toString());
+    await db.close();
+    return;
+  }
   await db.close();
 
-  member.send(welcome_msg+`
-Available commands:
+  let firstMsg = '';
+  if (row) {
+    let server = client.guilds.cache.get(config.discord.server_id);
+    let role = server.roles.cache.find((role) => role.name === config.discord.verified_role_name);
+    member.roles.add(role);
+    if (row.affiliation === 'alumni') {
+      let alumni_role = server.roles.cache.find((role) => role.name === 'Alumni');
+      member.roles.add(alumni_role);
+    }
+
+    member.setNickname(`${row.nickname} (${row.pronouns})`);
+
+    firstMsg = `
+Welcome back ${row.nickname} (${row.pronouns})!
+You have been auto-verified with your email address ${row.email}. If you think this is a mistake or you would like your information removed, please contact a Moderator.
+
+Remember you have access to the following commands:`;
+  }
+
+  else  {
+    firstMsg = welcome_msg+`
+
+Available commands:`;
+  }
+
+  member.send(firstMsg+`
 \`!iam <ucla_email_address> <preferred_name>\`: request a 6-digit verification code to verify your email address and set your nickname on the server. Note: \`preferred_name can be multiple words\`
 \`!verify <code>\`: verify the code that has been emailed to you.
 \`!whoami\`: check your verified email address.
