@@ -292,6 +292,10 @@ WHERE
 }
 
 async function setYear(userid, year) {
+  if(!year.match('(?:(?:19|20)[0-9]{2})')) {
+    return [null, 'Please enter a valid graduation year.']
+  }
+
   let db = await sqlite.open({
     filename: config.db_path,
     driver: sqlite3.Database,
