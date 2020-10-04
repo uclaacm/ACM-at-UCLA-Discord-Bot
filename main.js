@@ -27,8 +27,8 @@ async function verifyAndSendEmail(userid, email, nickname, affiliation) {
     return [null, 'Please enter a valid UCLA email address (example@cs.ucla.edu).'];
   }
 
-  if (nickname.length >= 20) {
-    return [null, 'Please enter a shorter name (less than 20 characters).'];
+  if (nickname.length > 19) {
+    return [null, 'Please enter a shorter name (max 19 characters).'];
   }
 
   let affil_key = config.affiliation_map[affiliation];
@@ -179,8 +179,8 @@ VALUES
 }
 
 async function setPronouns(userid, pronouns) {
-  if (pronouns.length >= 11) {
-    return [null, 'Please enter a shorter string (10 characters or less).'];
+  if (pronouns.length > 10) {
+    return [null, 'Please enter something shorter (max 10 characters).'];
   }
   let db = await sqlite.open({
     filename: config.db_path,
