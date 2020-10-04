@@ -1,8 +1,11 @@
 #!/bin/bash
 
-./export_users.bash
+full_path=$(realpath $0)
+project_root=$(dirname $(dirname full_path))
 
-./export_usercodes.bash
+$project_root/scripts/export_users.bash
 
-./export_messages.bash
+$project_root/scripts/export_usercodes.bash
+
+$project_root/scripts/export_messages.bash
 
