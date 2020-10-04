@@ -258,7 +258,7 @@ Thank you for making the server more inclusive!`
 // linked to MAJOR command
 async function setMajor(userid, major) {
   if (!config.majors_list.includes(major)) {
-    return [null, 'Sorry, I don\'t recognize your major! Please refer to https://catalog.registrar.ucla.edu/ucla-catalog20-21-5.html for valid major names (e.g. Computer Science)'];
+    return [null, 'Sorry, I don\'t recognize your major! Please refer to https://catalog.registrar.ucla.edu/ucla-catalog20-21-5.html for valid major names (e.g. Computer Science).'];
   }
   let db = await sqlite.open({
     filename: config.db_path,
@@ -793,11 +793,11 @@ You have been auto-verified with your email address ${row.email}. If you think t
 
 Remember you have access to the following commands:
 \`\`\`
-!whoami                                    | See how your name is displayed
-!major <valid_major>                       | Tell us your major
-!transfer                                  | Toggle transfer student status
-!year <grad_year>                          | Your graduation year
-!pronouns <pronouns>                       | Maximum of 10 characters
+!whoami                 | View server name
+!major <valid_major>    | Your major
+!transfer               | Transfer student
+!year <grad_year>       | Your grad year
+!pronouns <pronouns>    | Max 10 characters
 \`\`\`
 `;
   }
