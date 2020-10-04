@@ -1,7 +1,7 @@
 #!/bin/bash
 
 full_path=$(realpath $0)
-project_root=$(dirname $(dirname full_path))
+project_root=$(realpath $(dirname $(dirname $(realpath export_all.bash))))
 
 mkdir -p "$project_root/output"
 
