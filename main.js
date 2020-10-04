@@ -17,15 +17,19 @@ function genCode(n) {
 }
 
 // if email has not been verified, send verification code
-async function verifyAndSendEmail(userid, email, nickname) {
+async function verifyAndSendEmail(userid, email, nickname, affiliation) {
   let domain = email.match(
     '^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+.)?[a-zA-Z]+.)?(' +
       config.allowed_domains.join('|') +
       ')$'
   );
-
   if (!(domain && config.allowed_domains.includes(domain[1]))) {
-    return [null, 'Please enter a valid UCLA email address.'];
+    return [null, 'Please enter a valid UCLA email address (example@cs.ucla.edu)'];
+  }
+
+  let affil_key = config.affiliation_map[affiliation];
+  if (!affil_key) {
+    return [null, 'Please provide a valid affiliation (student/alumni/other).']
   }
 
   const db = await sqlite.open({
@@ -65,17 +69,18 @@ async function verifyAndSendEmail(userid, email, nickname) {
     await db.run(
       `
 INSERT INTO
-  usercodes(userid, email, nickname, code)
+  usercodes(userid, email, nickname, code, affiliation)
 VALUES
-  (?, ?, ?, ?)
+  (?, ?, ?, ?, ?)
   ON CONFLICT(userid) DO
   UPDATE
   SET
     email = ?,
     nickname = ?,
     code = ?,
+    affiliation = ?,
     expires_at = DATETIME('now', '+24 hours')`,
-      [userid, email, nickname, code, email, nickname, code]
+      [userid, email, nickname, code, affiliation, email, nickname, code, affiliation]
     );
     await sgMail.send(msg);
   } catch (e) {
@@ -102,14 +107,10 @@ async function verifyAndAddRole(code, role_name, author) {
   let role = server.roles.cache.find((role) => role.name === role_name);
   let member = server.members.cache.get(author.id);
 
-  if (member.roles.cache.find((role) => role.name === role_name)) {
-    return [null, 'You\'re already verified!'];
-  }
-
   let row = await db.get(
     `
 SELECT
-  email, nickname
+  email, nickname, affiliation
 FROM usercodes
 WHERE
   userid = ? AND
@@ -124,6 +125,10 @@ WHERE
   }
 
   member.roles.add(role);
+  if (row.affiliation === 'alumni') {
+    let alumni_role = server.roles.cache.find((role) => role.name === 'Alumni');
+    member.roles.add(alumni_role);
+  }
   member.setNickname(row.nickname);
 
   try {
@@ -131,22 +136,29 @@ WHERE
     await db.run(
       `
 INSERT INTO
-  users(userid, username, discriminator, nickname, email)
+  users(userid, username, discriminator, nickname, email, affiliation)
 VALUES
-  (?, ?, ?, ?, ?)
+  (?, ?, ?, ?, ?, ?)
   ON CONFLICT(userid) DO
   UPDATE
   SET
+    username = ?,
+    discriminator = ?,
+    nickname = ?,
     email = ?,
-    nickname = ?`,
+    affiliation = ?`,
       [
         author.id,
         author.username,
         author.discriminator,
         row.nickname,
         row.email,
-        row.email,
+        row.affiliation,
+        author.username,
+        author.discriminator,
         row.nickname,
+        row.email,
+        row.affiliation
       ]
     );
   } catch (e) {
@@ -206,6 +218,7 @@ Your verified email address is ${row.email}`,
 }
 
 // set nickname after verification
+/*
 async function setNick(userid, nickname) {
   let db = await sqlite.open({
     filename: config.db_path,
@@ -262,8 +275,10 @@ WHERE
   await db.close();
   return [null, `Done! Bye bye ${row.nickname} and hello ${nickname}.`];
 }
+*/
 
 // get information on a user by discord username (note: users can change this)
+// only `userid` is invariant. Use getUserById
 async function getUserByUsername(username, discriminator) {
   let db = await sqlite.open({
     filename: config.db_path,
@@ -297,8 +312,15 @@ WHERE
   return [
     null,
     `
+Userid: ${row.userid}
 Nickname: ${row.nickname}
-Email: ${row.email}`,
+Email: ${row.email}
+Affiliation: ${row.affiliation}
+Major: ${row.major}
+Year: ${row.grad_year}
+Transfer?: ${row.transfer ? 'yes' : 'no'}
+Verified at: ${row.verified_at}
+`,
   ];
 }
 
@@ -335,9 +357,15 @@ WHERE
   return [
     null,
     `
-userid: ${userid}
+Userid: ${row.userid}
 Nickname: ${row.nickname}
-Email: ${row.email}`,
+Email: ${row.email}
+Affiliation: ${row.affiliation}
+Major: ${row.major}
+Year: ${row.grad_year}
+Transfer?: ${row.transfer ? 'yes' : 'no'}
+Verified at: ${row.verified_at}
+`,
   ];
 }
 
@@ -370,7 +398,6 @@ async function getMsg(type) {
     row.message
   ];
 }
-
 
 async function setWelcomeMsg(type, msg) {
   let db = await sqlite.open({
@@ -414,6 +441,7 @@ client.on('ready', async () => {
                 email       TEXT,
                 nickname    TEXT,
                 code        TEXT,
+                affiliation TEXT,
                 expires_at  DATE DEFAULT (DATETIME('now', '+24 hours')),
       PRIMARY KEY (userid))`
   );
@@ -478,13 +506,15 @@ client.on('message', async (msg) => {
   }
 
   // verify for the first time
-  if (cmd.length >= 3 && cmd[0] === '!iam') {
-    let email = cmd[1].toLowerCase();
-    let nickname = cmd.slice(2, cmd.length).join(' ');
+  if (cmd.length >= 4 && cmd[0] === '!iam') {
+    let affiliation = cmd[1].toLowerCase();
+    let nickname = cmd.slice(2, cmd.length-1).join(' ');
+    let email = cmd[cmd.length-1].toLowerCase();
     let [err, message] = await verifyAndSendEmail(
       msg.author.id,
       email,
-      nickname
+      nickname,
+      affiliation
     );
     if (err) {
       msg.reply('Something went wrong!\n`' + err.message + '`');
