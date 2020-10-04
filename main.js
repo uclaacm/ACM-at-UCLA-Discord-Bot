@@ -176,7 +176,15 @@ VALUES
   await db.close();
   return [
     null,
-    `Thanks ${row.nickname}! You have now been verified and can access the server!`,
+    `Thanks ${row.nickname}! You have been verified and can now access the server! Please use the following commands to tell us a bit more about yourself!
+\`\`\`
+!whoami                                    | See how your name is displayed
+!major <valid_major>                       | Tell us your major
+!transfer                                  | Toggle transfer student status
+!year <grad_year>                          | Your graduation year
+!pronouns <pronouns>                       | Maximum of 10 characters
+\`\`\`
+`
   ];
 }
 

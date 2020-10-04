@@ -16,7 +16,17 @@ module.exports = {
     sender: 'acm@ucla.edu',
   },
   default_msgs: {
-    welcome: 'Welcome to the official ACM at UCLA Discord server.',
+    welcome: `
+Welcome to the official **ACM at UCLA** Discord community!
+
+To keep the server a safe place for everyone,  please verify yourself using your UCLA.edu email address. We recommend using **\`@g.ucla.edu\`** over **\`@ucla.edu\`** for faster verification. Also, please let us know your affiliation with UCLA (student/alumni/other).
+
+**By verifying, you agree to the rules and guidelines posted in #:information_source:server-info**
+To obtain your verification code, reply to this message with the following command:
+\`\`\`MD
+!iam <affiliation> <name> <ucla_email>
+\`\`\`
+`,
   },
   majors_list: [
     'aerospace engineering',
