@@ -723,23 +723,27 @@ Available commands:
 
 // on new message
 client.on('message', async (msg) => {
-  if (msg.author.bot === true || msg.channel.type !== 'dm') {
+  if (msg.author.bot || msg.channel.type !== 'dm' || !msg.content.startsWith(config.cmd_prefix)) {
     return;
   }
 
   let server = client.guilds.cache.get(config.discord.server_id);
   let member = server.members.cache.get(msg.author.id);
 
-  let cmd = msg.content.split(' ');
-  if (cmd.length < 1) {
-    return;
-  }
+  const args = msg.content.slice(config.cmd_prefix.length).trim().split(' ');
+  const command = args.shift().toLowerCase();
 
-  // verify for the first time
-  if (cmd.length >= 4 && cmd[0] === '!iam') {
-    let affiliation = cmd[1].toLowerCase();
-    let nickname = cmd.slice(2, cmd.length-1).join(' ');
-    let email = cmd[cmd.length-1].toLowerCase();
+  // IAM: verify for the first time with required info
+  if (command === 'iam') {
+    if (args.length < 3) {
+      msg.reply(
+        'Invalid command format. Format: `!iam <affiliation> <name> <ucla_email>` e.g. `!iam student Joe Bruin joe@g.ucla.edu`'
+      );
+      return;
+    }
+    let affiliation = args[0].toLowerCase();
+    let nickname = args.slice(1, args.length-1).join(' ');
+    let email = args[args.length-1].toLowerCase();
     let [err, message] = await verifyAndSendEmail(
       msg.author.id,
       email,
@@ -754,9 +758,15 @@ client.on('message', async (msg) => {
     }
   }
 
-  // verify code
-  else if (cmd.length >= 2 && cmd[0] === '!verify') {
-    let code = cmd[1];
+  // VERIFY: verify emailed code
+  else if (command === 'verify') {
+    if (args.length < 1) {
+      msg.reply(
+        'Invalid command format. Format: `!verify <code>` e.g. `!verify 314159`'
+      );
+      return;
+    }
+    let code = args[0];
     let [err, message] = await verifyAndAddRole(
       code,
       config.discord.verified_role_name,
@@ -771,8 +781,16 @@ client.on('message', async (msg) => {
     }
   }
 
-  else if (cmd.length >= 2 && cmd[0] === '!pronouns') {
-    let pronouns = cmd.slice(1, cmd.length).join(' ').toLowerCase();
+  // PRONOUNS: set pronouns and add to server nickname
+  else if (command === 'pronouns') {
+    if (args.length < 1) {
+      msg.reply(
+        'Invalid command format. Format: `!pronouns <preferred_pronouns>` e.g. `!pronouns she/her`'
+      );
+      return;
+    }
+
+    let pronouns = args.join(' ').toLowerCase();
     let [err, message] = await setPronouns(msg.author.id, pronouns);
     if (err) {
       msg.reply('Something went wrong!\n`' + err.message + '`');
@@ -782,8 +800,15 @@ client.on('message', async (msg) => {
     }
   }
 
-  else if (cmd.length >= 2 && cmd[0] === '!major') {
-    let major = cmd.slice(1, cmd.length).join(' ').toLowerCase();
+  // MAJOR: set major in database
+  else if (command === 'major') {
+    if (args.length < 1) {
+      msg.reply(
+        'Invalid command format. Format: `!major <ucla_major>` e.g. `!major Computer Science`'
+      );
+      return;
+    }
+    let major = args.join(' ').toLowerCase();
     let [err, message] = await setMajor(msg.author.id, major);
     if (err) {
       msg.reply('Something went wrong!\n`' + err.message + '`');
@@ -793,8 +818,15 @@ client.on('message', async (msg) => {
     }
   }
 
-  else if (cmd.length >= 2 && cmd[0] === '!year') {
-    let year = cmd[1];
+  // YEAR: set graduation year in database
+  else if (command === 'year') {
+    if (args.length < 1) {
+      msg.reply(
+        'Invalid command format. Format: `!year <graduation_year>` e.g. `!year 2024`'
+      );
+      return;
+    }
+    let year = args[0];
     let [err, message] = await setYear(msg.author.id, year);
     if (err) {
       msg.reply('Something went wrong!\n`' + err.message + '`');
@@ -804,7 +836,8 @@ client.on('message', async (msg) => {
     }
   }
 
-  else if (cmd.length >= 1 && cmd[0] === '!transfer') {
+  // TRANSFER: toggle transfer student flag
+  else if (command === 'transfer') {
     let [err, message] = await toggleTransfer(msg.author.id);
     if (err) {
       msg.reply('Something went wrong!\n`' + err.message + '`');
@@ -814,8 +847,8 @@ client.on('message', async (msg) => {
     }
   }
 
-  // who are you???
-  else if (cmd[0] === '!whoami') {
+  // WHOAMI: who are you???
+  else if (command === 'whoami') {
     let [err, message] = await whoami(msg.author.id);
     if (err) {
       msg.reply('Something went wrong!\n`' + err.message + '`');
@@ -841,24 +874,24 @@ client.on('message', async (msg) => {
   }
   */
 
-  // lookup a user
-  else if (member.hasPermission('ADMINISTRATOR') && cmd[0] === '!lookup') {
-    if (cmd.length < 2) {
+  // LOOKUP: [ADMIN] lookup a user by id or username#disc
+  else if (member.hasPermission('ADMINISTRATOR') && command === 'lookup') {
+    if (args.length < 1) {
       msg.reply(
-        'Invalid command. Format: `!lookup (<username>#<discriminator> | <userid>)`'
+        'Invalid command format. Format: `!lookup (<username>#<discriminator> | <userid>)`'
       );
       return;
     }
 
     let [err, message] = [null, null];
 
-    if (cmd[1].match('.+#([0-9]){4}')) {
+    if (args[0].match('.+#([0-9]){4}')) {
       let [username, discriminator] = cmd[1].split('#');
       [err, message] = await getUserByUsername(username, discriminator);
     }
 
     else {
-      [err, message] = await getUserById(cmd[1]);
+      [err, message] = await getUserById(args[0]);
     }
 
     if (err) {
@@ -870,11 +903,11 @@ client.on('message', async (msg) => {
     }
   }
 
-  // get bot messages
-  else if (member.hasPermission('ADMINISTRATOR') && cmd[0] === '!get_message') {
-    if (cmd.length < 2) {
+  // GET_MESSAGE: [ADMIN] get bot messages of specific type
+  else if (command === 'get_message' && member.hasPermission('ADMINISTRATOR')) {
+    if (args.length < 1) {
       msg.reply(
-        'Invalid command. Format: `!get_message <type>`'
+        'Invalid command format. Format: `!get_message <type>`'
       );
       return;
     }
@@ -889,17 +922,17 @@ client.on('message', async (msg) => {
     }
   }
 
-  // set bot messages
-  else if (member.hasPermission('ADMINISTRATOR') && cmd[0] === '!set_message') {
-    if (cmd.length < 3) {
+  // SET_MESSAGE: [ADMIN] set bot messages of specific type
+  else if (command === 'set_message' && member.hasPermission('ADMINISTRATOR')) {
+    if (args.length < 2) {
       msg.reply(
-        'Invalid command. Format: `!set_message <type> <message_content>`'
+        'Invalid command format. Format: `!set_message <type> <message_content>`'
       );
       return;
     }
 
-    if (cmd[1] == 'welcome') {
-      let welcome_msg = cmd.slice(2).join(' ');
+    if (args[0] === 'welcome') {
+      let welcome_msg = args.slice(1).join(' ');
       let [err, message] = await setWelcomeMsg('welcome', welcome_msg);
       if (err) {
         msg.reply('Something went wrong!\n`' + err.message + '`');
