@@ -441,7 +441,7 @@ async function whoami(userid) {
     row = await db.get(
       `
 SELECT
-  nickname, email
+  *
 FROM users
 WHERE
   userid = ?`,
@@ -467,7 +467,7 @@ Use \`!iam <ucla_email_address> <preferred_name>\` and verify your email address
   return [
     null,
     `
-Why, you're ${row.nickname} of course!
+Why, you're ${row.nickname} (${row.pronouns}) of course!
 Your verified email address is ${row.email}`,
   ];
 }
