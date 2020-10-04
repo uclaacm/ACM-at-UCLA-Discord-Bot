@@ -221,7 +221,7 @@ WHERE
       null,
       `
 Sorry, I don't think you're verified!.
-Use \`!iam <ucla_email_address> <preferred_name>\` and verify your email address.`,
+Use \`!iam <affiliation> <name> <ucla_email>\` and verify your email address.`,
     ];
   }
 
@@ -287,7 +287,7 @@ WHERE
       null,
       `
 Sorry, I don't think you're verified!.
-Use \`!iam <ucla_email_address> <preferred_name>\` and verify your email address.`,
+Use \`!iam <affiliation> <name> <ucla_email>\` and verify your email address.`,
     ];
   }
 
@@ -349,7 +349,7 @@ WHERE
       null,
       `
 Sorry, I don't think you're verified!.
-Use \`!iam <ucla_email_address> <preferred_name>\` and verify your email address.`,
+Use \`!iam <affiliation> <name> <ucla_email>\` and verify your email address.`,
     ];
   }
 
@@ -408,7 +408,7 @@ WHERE
       null,
       `
 Sorry, I don't think you're verified!.
-Use \`!iam <ucla_email_address> <preferred_name>\` and verify your email address.`,
+Use \`!iam <affiliation> <name> <ucla_email>\` and verify your email address.`,
     ];
   }
 
@@ -468,7 +468,7 @@ WHERE
       null,
       `
 Hmmm I'm really not sure myself but I'd love to get to know you!
-Use \`!iam <ucla_email_address> <preferred_name>\` and verify your email address.`,
+Use \`!iam <affiliation> <name> <ucla_email>\` and verify your email address.`,
     ];
   }
 
@@ -791,20 +791,22 @@ client.on('guildMemberAdd', async (member) => {
 Welcome back ${row.nickname} (${row.pronouns})!
 You have been auto-verified with your email address ${row.email}. If you think this is a mistake or you would like your information removed, please contact a Moderator.
 
-Remember you have access to the following commands:`;
+Remember you have access to the following commands:
+\`\`\`
+!whoami                                    | See how your name is displayed
+!major <valid_major>                       | Tell us your major
+!transfer                                  | Toggle transfer student status
+!year <grad_year>                          | Your graduation year
+!pronouns <pronouns>                       | Maximum of 10 characters
+\`\`\`
+`;
   }
 
   else  {
-    firstMsg = welcome_msg+`
-
-Available commands:`;
+    firstMsg = welcome_msg;
   }
 
-  member.send(firstMsg+`
-\`!iam <ucla_email_address> <preferred_name>\`: request a 6-digit verification code to verify your email address and set your nickname on the server. Note: \`preferred_name can be multiple words\`
-\`!verify <code>\`: verify the code that has been emailed to you.
-\`!whoami\`: check your verified email address.
-\`!name <preferred_name>\`: change your nickname on the server.`);
+  member.send(firstMsg);
 });
 
 // on new message
@@ -1039,12 +1041,7 @@ client.on('message', async (msg) => {
   }
   else {
     msg.reply(`
-Invalid command/format.
-Available commands:
-\`!iam <ucla_email_address> <preferred_name>\`: request a 6-digit verification code to verify your email address and set your nickname on the server.
-\`!verify <code>\`: verify the code that has been emailed to you.
-\`!whoami\`: check your verified email address.
-\`!name <preferred_name>\`: change your nickname on the server.`);
+Invalid command/format. Please see available commands above.`);
   }
 });
 
