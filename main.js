@@ -415,7 +415,7 @@ async function whoami(userid) {
     driver: sqlite3.Database,
   });
 
-  var row = null;
+  let row = null;
   try {
     row = await db.get(
       `
@@ -519,7 +519,7 @@ async function getUserByUsername(username, discriminator) {
     driver: sqlite3.Database,
   });
 
-  var row = null;
+  let row = null;
   try {
     row = await db.get(
       `
@@ -565,7 +565,7 @@ async function getUserById(userid) {
     driver: sqlite3.Database,
   });
 
-  var row = null;
+  let row = null;
   try {
     row = await db.get(
       `
@@ -890,7 +890,7 @@ client.on('message', async (msg) => {
     let [err, message] = [null, null];
 
     if (args[0].match('.+#([0-9]){4}')) {
-      let [username, discriminator] = cmd[1].split('#');
+      let [username, discriminator] = args[0].split('#');
       [err, message] = await getUserByUsername(username, discriminator);
     }
 
