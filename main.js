@@ -540,7 +540,7 @@ WHERE
   await db.close();
 
   if (!row) {
-    return [null, 'User not found.'];
+    return [null, 'User not found/verified.'];
   }
 
   return [
@@ -552,7 +552,7 @@ Email: ${row.email}
 Affiliation: ${row.affiliation}
 Major: ${row.major}
 Year: ${row.grad_year}
-Transfer?: ${row.transfer ? 'yes' : 'no'}
+Transfer?: ${row.transfer_flag == 1 ? 'yes' : 'no'}
 Verified at: ${row.verified_at}
 `,
   ];
@@ -585,7 +585,7 @@ WHERE
   await db.close();
 
   if (!row) {
-    return [null, 'User not found.'];
+    return [null, 'User not found/verified.'];
   }
 
   return [
@@ -597,7 +597,7 @@ Email: ${row.email}
 Affiliation: ${row.affiliation}
 Major: ${row.major}
 Year: ${row.grad_year}
-Transfer?: ${row.transfer ? 'yes' : 'no'}
+Transfer?: ${row.transfer_flag == 1 ? 'yes' : 'no'}
 Verified at: ${row.verified_at}
 `,
   ];
