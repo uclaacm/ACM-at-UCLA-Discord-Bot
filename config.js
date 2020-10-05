@@ -10,6 +10,8 @@ module.exports = {
   discord: {
     server_id: '702801010426511373',
     verified_role_name: 'Verified',
+    mod_role_name: 'Moderator',
+    alumni_role_name: 'Alumni',
   },
   sendgrid: {
     template_id: 'd-81b6d43b226248558115aefa745affeb',

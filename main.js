@@ -4,7 +4,14 @@ const sqlite = require('sqlite');
 const sqlite3 = require('sqlite3');
 const config = require('./config');
 
+// discord
 const client = new Discord.Client();
+let server = null;
+let verified_role = null;
+let mod_role = null;
+let alumni_role = null;
+
+// sendgrid
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 // generates a n-digit random code
@@ -18,7 +25,8 @@ function genCode(n) {
 
 // if email has not been verified, send verification code
 // linked to IAM command
-async function verifyAndSendEmail(userid, email, nickname, affiliation) {
+async function iam(userid, email, nickname, affiliation) {
+  // check email against allowed domains
   let domain = email.match(
     '^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+.)?[a-zA-Z]+.)?(' +
       config.allowed_domains.join('|') +
@@ -28,20 +36,25 @@ async function verifyAndSendEmail(userid, email, nickname, affiliation) {
     return [null, 'Please enter a valid UCLA email address (example@cs.ucla.edu).'];
   }
 
+  // nickname length less than 20 characters to allow for pronouns
+  // discord nickname max length 32 chars
   if (nickname.length > 19) {
     return [null, 'Please enter a shorter name (max 19 characters).'];
   }
 
+  // TODO: store affil_key and not entire string to reduce storage on db
   let affil_key = config.affiliation_map[affiliation];
   if (!affil_key) {
     return [null, 'Please provide a valid affiliation (student/alumni/other).']
   }
 
+  // open db
   const db = await sqlite.open({
     filename: config.db_path,
     driver: sqlite3.Database,
   });
 
+  // check if email is already verified
   let emailExists = null;
   try {
     // TODO: treat .*.ucla.edu the same as ucla.edu for existence check
@@ -51,14 +64,13 @@ async function verifyAndSendEmail(userid, email, nickname, affiliation) {
     await db.close();
     return [{ message: e.toString() }, null];
   }
-
   if (emailExists) {
     await db.close();
     return [null, 'This email has already been verified. If you own this email address, please contact any of the Moderators.'];
   }
 
+  // send 6-digit code to provided email
   const code = genCode(6);
-
   const msg = {
     to: email,
     from: config.sendgrid.sender,
@@ -72,8 +84,8 @@ async function verifyAndSendEmail(userid, email, nickname, affiliation) {
       email: email
     },
   };
-
   try {
+    // store verification code in db
     await db.run(
       `
 INSERT INTO
@@ -90,14 +102,15 @@ VALUES
     expires_at = DATETIME('now', '+24 hours')`,
       [userid, email, nickname, code, affiliation, email, nickname, code, affiliation]
     );
+    // api call to send email
     await sgMail.send(msg);
   } catch (e) {
     console.error(e.toString());
     await db.close();
     return [{ message: e.toString() }, null];
   }
-
   await db.close();
+
   return [
     null,
     `Please check your email \`${email}\` for a 6-digit verification code. Verify using \`!verify <code>\``,
@@ -106,18 +119,22 @@ VALUES
 
 // verify code and and role to access server
 // linked to VERIFY command
-async function verifyAndAddRole(code, role_name, author) {
+async function verify(code, role_name, author) {
+  // open db
   let db = await sqlite.open({
     filename: config.db_path,
     driver: sqlite3.Database,
   });
 
-  let server = client.guilds.cache.get(config.discord.server_id);
-  let role = server.roles.cache.find((role) => role.name === role_name);
+  // get member from the ACM server
   let member = server.members.cache.get(author.id);
 
-  let row = await db.get(
-    `
+  // get iam details from usercodes table
+  let row = null;
+  let row_user = null;
+  try {
+    row = await db.get(
+      `
 SELECT
   email, nickname, affiliation
 FROM usercodes
@@ -125,23 +142,40 @@ WHERE
   userid = ? AND
   code = ? AND
   expires_at > datetime('now')`,
-    [author.id, code]
-  );
-
+      [author.id, code]
+    );
+    row_user = await db.get(
+      `
+SELECT
+  pronouns
+FROM users
+WHERE
+  userid = ?`,
+      [author.id]
+    );
+  } catch (e) {
+    console.error(e.toString());
+    await db.close();
+    return [{ message: e.toString() }, null];
+  }
   if (!row) {
     await db.close();
     return [null, 'Sorry, this code is either invalid/expired.'];
   }
 
-  member.roles.add(role);
-  if (row.affiliation === 'alumni') {
-    let alumni_role = server.roles.cache.find((role) => role.name === 'Alumni');
+  // add verified role to user
+  member.roles.add(verified_role);
+  if (row.affiliation === 'alumni') { // and if alumni, add alumni role
     member.roles.add(alumni_role);
   }
-  member.setNickname(row.nickname);
+
+  // set nickname: <name> (<pronouns>)
+  member.setNickname(row.nickname + (row_user ? ` (${row_user.pronouns})`: ''));
 
   try {
+    // delete usercode entry
     await db.run('DELETE FROM usercodes WHERE userid = ?', [author.id]);
+    // add to users db (stores verified users)
     await db.run(
       `
 INSERT INTO
@@ -187,21 +221,31 @@ VALUES
 !pronouns <pronouns>    | Max 10 characters
 !whoami                 | View server name
 \`\`\`
-`
+` + (member.roles.cache.has(mod_role.id) ? `
+Since you're a Moderator, you can also use the following commands:
+\`\`\`
+!name <userid> <new_name>   | change userids nickname
+!lookup <userid>            | lookup verified user
+\`\`\`
+` : '')
   ];
 }
 
 // add pronouns to nickname
 // linked to PRONOUNS command
 async function setPronouns(userid, pronouns) {
+  // pronouns string should be less than 11 chars
   if (pronouns.length > 10) {
     return [null, 'Please enter something shorter (max 10 characters).'];
   }
+
+  // open db
   let db = await sqlite.open({
     filename: config.db_path,
     driver: sqlite3.Database,
   });
 
+  // check if user is verified
   let row = null;
   try {
     row = await db.get(
@@ -218,16 +262,17 @@ WHERE
     await db.close();
     return [{ message: e.toString() }, null];
   }
-
   if (!row) {
+    await db.close();
     return [
       null,
       `
 Sorry, I don't think you're verified!.
-Use \`!iam <affiliation> <name> <ucla_email>\` and verify your email address.`,
+Use \`!iam <affiliation> <name> <ucla_email>\` to verify your email address.`,
     ];
   }
 
+  // set pronouns in db
   try {
     await db.run(
       `
@@ -244,12 +289,12 @@ WHERE
     await db.close();
     return [{ message: e.toString() }, null];
   }
+  await db.close();
 
-  let server = client.guilds.cache.get(config.discord.server_id);
+  // set pronouns in nickname on server
   let member = server.members.cache.get(userid);
   member.setNickname(`${row.nickname} (${pronouns})`);
 
-  await db.close();
   return [
     null,
     `Successfully added your pronouns (${pronouns}) to your name in the server.
@@ -260,14 +305,18 @@ Thank you for making the server more inclusive!`
 // add major in database record
 // linked to MAJOR command
 async function setMajor(userid, major) {
+  // check major against official list
   if (!config.majors_list.includes(major)) {
     return [null, 'Sorry, I don\'t recognize your major! Please refer to https://catalog.registrar.ucla.edu/ucla-catalog20-21-5.html for valid major names (e.g. Computer Science).'];
   }
+
+  // open db
   let db = await sqlite.open({
     filename: config.db_path,
     driver: sqlite3.Database,
   });
 
+  // check if user is verified
   let row = null;
   try {
     row = await db.get(
@@ -284,8 +333,8 @@ WHERE
     await db.close();
     return [{ message: e.toString() }, null];
   }
-
   if (!row) {
+    await db.close();
     return [
       null,
       `
@@ -294,6 +343,7 @@ Use \`!iam <affiliation> <name> <ucla_email>\` and verify your email address.`,
     ];
   }
 
+  // set major in db
   try {
     await db.run(
       `
@@ -310,8 +360,8 @@ WHERE
     await db.close();
     return [{ message: e.toString() }, null];
   }
-
   await db.close();
+
   return [
     null,
     `Successfully added your major (${major}). Thank you!`
@@ -321,15 +371,18 @@ WHERE
 // add year in database record
 // linked to YEAR command
 async function setYear(userid, year) {
+  // validate year (1900-2099)
   if(!year.match('^(?:(?:19|20)[0-9]{2})$')) {
     return [null, 'Please enter a valid graduation year.']
   }
 
+  // open db
   let db = await sqlite.open({
     filename: config.db_path,
     driver: sqlite3.Database,
   });
 
+  //c check if user is verified
   let row = null;
   try {
     row = await db.get(
@@ -346,8 +399,8 @@ WHERE
     await db.close();
     return [{ message: e.toString() }, null];
   }
-
   if (!row) {
+    await db.close();
     return [
       null,
       `
@@ -356,6 +409,7 @@ Use \`!iam <affiliation> <name> <ucla_email>\` and verify your email address.`,
     ];
   }
 
+  // set graduation year in db
   try {
     await db.run(
       `
@@ -372,8 +426,8 @@ WHERE
     await db.close();
     return [{ message: e.toString() }, null];
   }
-
   await db.close();
+
   return [
     null,
     `Successfully added your graduation year (${year}). Thank you!`
@@ -384,11 +438,13 @@ WHERE
 // toggle transfer student flag
 // linked to TRANSFER command
 async function toggleTransfer(userid) {
+  // open db
   let db = await sqlite.open({
     filename: config.db_path,
     driver: sqlite3.Database,
   });
 
+  // check if user is verified
   let row = null;
   try {
     row = await db.get(
@@ -405,8 +461,8 @@ WHERE
     await db.close();
     return [{ message: e.toString() }, null];
   }
-
   if (!row) {
+    await db.close();
     return [
       null,
       `
@@ -415,6 +471,7 @@ Use \`!iam <affiliation> <name> <ucla_email>\` and verify your email address.`,
     ];
   }
 
+  // toggle transfer flag in db
   try {
     await db.run(
       `
@@ -431,8 +488,8 @@ WHERE
     await db.close();
     return [{ message: e.toString() }, null];
   }
-
   await db.close();
+
   return [
     null,
     `Successfully ${row.transfer_flag == 1 ? 'un' : ''}marked you as a transfer student. Thank you!`
@@ -442,11 +499,13 @@ WHERE
 // who are you???
 // linked to WHOAMI command
 async function whoami(userid) {
+  // open db
   let db = await sqlite.open({
     filename: config.db_path,
     driver: sqlite3.Database,
   });
 
+  // check if user is verified
   let row = null;
   try {
     row = await db.get(
@@ -463,9 +522,7 @@ WHERE
     await db.close();
     return [{ message: e.toString() }, null];
   }
-
   await db.close();
-
   if (!row) {
     return [
       null,
@@ -487,11 +544,13 @@ Your verified email address is ${row.email}`,
 // only `userid` is invariant. Use getUserById
 // linked to LOOKUP command
 async function getUserByUsername(username, discriminator) {
+  // open db
   let db = await sqlite.open({
     filename: config.db_path,
     driver: sqlite3.Database,
   });
 
+  // check if user is verified
   let row = null;
   try {
     row = await db.get(
@@ -509,9 +568,7 @@ WHERE
     await db.close();
     return [{ message: e.toString() }, null];
   }
-
   await db.close();
-
   if (!row) {
     return [null, 'User not found/verified.'];
   }
@@ -535,11 +592,13 @@ Verified at: ${row.verified_at}
 // get information on a user by discord username (note: users can change this)
 // linked to LOOKUP command
 async function getUserById(userid) {
+  // open db
   let db = await sqlite.open({
     filename: config.db_path,
     driver: sqlite3.Database,
   });
 
+  // check is user is verified
   let row = null;
   try {
     row = await db.get(
@@ -556,9 +615,7 @@ WHERE
     await db.close();
     return [{ message: e.toString() }, null];
   }
-
   await db.close();
-
   if (!row) {
     return [null, 'User not found/verified.'];
   }
@@ -582,11 +639,13 @@ Verified at: ${row.verified_at}
 // get message content of specific type
 // linked to GET_MESSAGE command
 async function getMsg(type) {
+  // open db
   let db = await sqlite.open({
     filename: config.db_path,
     driver: sqlite3.Database,
   });
 
+  // get message of specific type
   let row = null;
   try {
     row = await db.get('SELECT message FROM messages WHERE message_id = ?', [type]);
@@ -595,9 +654,7 @@ async function getMsg(type) {
     await db.close();
     return [{ message: e.toString() }, null];
   }
-
   await db.close();
-
   if (!row) {
     return [
       null,
@@ -614,11 +671,13 @@ async function getMsg(type) {
 // set message of specific type
 // linked to SET_MESSAGE command
 async function setMsg(type, msg) {
+  // open db
   let db = await sqlite.open({
     filename: config.db_path,
     driver: sqlite3.Database,
   });
 
+  // update message of specific type
   try {
     await db.run(`
 UPDATE messages
@@ -641,15 +700,18 @@ WHERE
 }
 
 async function updateUserNickname(userid, nickname) {
+  // nickname length should be less than 20 chars
   if (nickname.length > 19) {
     return [null, 'Please enter a shorter name (max 19 characters).'];
   }
 
+  // open db
   let db = await sqlite.open({
     filename: config.db_path,
     driver: sqlite3.Database,
   });
 
+  // get current nickname and pronouns
   let row = null;
   try {
     row = await db.get(
@@ -666,7 +728,6 @@ WHERE
     await db.close();
     return [{ message: e.toString() }, null];
   }
-
   if (!row) {
     return [
       null,
@@ -675,6 +736,7 @@ Invalid/unverified user.`,
     ];
   }
 
+  // update nickname on db
   try {
     await db.run(
       `
@@ -691,18 +753,18 @@ WHERE
     await db.close();
     return [{ message: e.toString() }, null];
   }
+  await db.close();
 
-  let server = client.guilds.cache.get(config.discord.server_id);
+  // update nickname on server
   let member = server.members.cache.get(userid);
   if (!member) {
     return [
       null,
-      `User not found.`
+      'User not found.'
     ];
   }
-  member.setNickname(`${nickname} (${row.pronouns})`);
+  member.setNickname(nickname + (row.pronouns ? ` (${row.pronouns})`: ''));
 
-  await db.close();
   return [
     null,
     `Successfully changed: ${row.nickname} -> ${nickname}.`
@@ -713,11 +775,19 @@ WHERE
 client.on('ready', async () => {
   console.log(`Logged in as ${client.user.tag}!`);
 
+  // find server and required roles
+  server = client.guilds.cache.get(config.discord.server_id);
+  verified_role = server.roles.cache.find((role) => role.name === config.discord.verified_role_name);
+  mod_role = server.roles.cache.find((role) => role.name === config.discord.mod_role_name);
+  alumni_role = server.roles.cache.find((role) => role.name === config.discord.alumni_role_name);
+
+  // open db
   let db = await sqlite.open({
     filename: config.db_path,
     driver: sqlite3.Database,
   });
 
+  // create usercodes table
   await db.exec(
     `CREATE TABLE IF NOT EXISTS
       usercodes(userid      TEXT,
@@ -728,6 +798,8 @@ client.on('ready', async () => {
                 expires_at  DATE DEFAULT (DATETIME('now', '+24 hours')),
       PRIMARY KEY (userid))`
   );
+
+  // create users table
   await db.exec(
     `CREATE TABLE IF NOT EXISTS
       users(userid        TEXT,
@@ -744,6 +816,7 @@ client.on('ready', async () => {
       PRIMARY KEY (userid))`
   );
 
+  // create messages table
   await db.exec(
     `CREATE TABLE IF NOT EXISTS
       messages(message_id TEXT,
@@ -751,6 +824,7 @@ client.on('ready', async () => {
       PRIMARY KEY (message_id))`
   );
 
+  // set default welcome message
   let welcome_msg = config.default_msgs.welcome;
   await db.run(`INSERT OR IGNORE INTO messages(message_id, message) VALUES ('welcome', ?)`, [welcome_msg]);
 
@@ -759,18 +833,19 @@ client.on('ready', async () => {
 
 // on new user, dm him with info and verification instructions
 client.on('guildMemberAdd', async (member) => {
+  // open db
   const db = await sqlite.open({
     filename: config.db_path,
     driver: sqlite3.Database,
   });
 
+  // get welcome message and user entry from db
   let welcome_msg = null;
   let row = null;
-
   try {
-    let {message} = await db.get(`SELECT message FROM messages WHERE message_id = ?`, 'welcome');
+    let {message} = await db.get('SELECT message FROM messages WHERE message_id = ?', 'welcome');
     welcome_msg = message;
-    row = await db.get(`SELECT * FROM users WHERE userid = ?`, [member.id])
+    row = await db.get('SELECT * FROM users WHERE userid = ?', [member.id])
   } catch (e) {
     console.error(e.toString());
     await db.close();
@@ -779,17 +854,14 @@ client.on('guildMemberAdd', async (member) => {
   await db.close();
 
   let firstMsg = '';
+  // auto-verify existing user
   if (row) {
-    let server = client.guilds.cache.get(config.discord.server_id);
     let server_member = server.members.cache.get(member.id);
-    let role = server.roles.cache.find((role) => role.name === config.discord.verified_role_name);
-    server_member.roles.add(role);
+    server_member.roles.add(verified_role);
     if (row.affiliation === 'alumni') {
-      let alumni_role = server.roles.cache.find((role) => role.name === 'Alumni');
       server_member.roles.add(alumni_role);
     }
-
-    server_member.setNickname(`${row.nickname} (${row.pronouns})`);
+    server_member.setNickname(row.nickname + (row.pronouns ? ` (${row.pronouns})`: ''));
 
     firstMsg = `
 Welcome back ${row.nickname} (${row.pronouns})!
@@ -803,7 +875,13 @@ Remember you have access to the following commands:
 !pronouns <pronouns>    | Max 10 characters
 !whoami                 | View server name
 \`\`\`
-`;
+` + (member.roles.cache.has(mod_role.id) ? `
+Since you're a Moderator, you can also use the following commands:
+\`\`\`
+!name <userid> <new_name>   | change userids nickname
+!lookup <userid>            | lookup verified user
+\`\`\`
+` : '');
   }
 
   else  {
@@ -815,15 +893,19 @@ Remember you have access to the following commands:
 
 // on new message
 client.on('message', async (msg) => {
+  // ignore bots, non-dms, and non-commands
+  // TODO: allow non-dms for moderator commands
   if (msg.author.bot || msg.channel.type !== 'dm' || !msg.content.startsWith(config.cmd_prefix)) {
     return;
   }
 
-  let server = client.guilds.cache.get(config.discord.server_id);
-  let member = server.members.cache.get(msg.author.id);
-
+  // parse input command and args
   const args = msg.content.slice(config.cmd_prefix.length).trim().split(' ');
   const command = args.shift().toLowerCase();
+
+  let member = server.members.cache.get(msg.author.id);
+
+  let [err, message] = [null, null];
 
   // IAM: verify for the first time with required info
   if (command === 'iam') {
@@ -836,18 +918,12 @@ client.on('message', async (msg) => {
     let affiliation = args[0].toLowerCase();
     let nickname = args.slice(1, args.length-1).join(' ');
     let email = args[args.length-1].toLowerCase();
-    let [err, message] = await verifyAndSendEmail(
+    [err, message] = await iam(
       msg.author.id,
       email,
       nickname,
       affiliation
     );
-    if (err) {
-      msg.reply('Something went wrong!\n`' + err.message + '`');
-    }
-    if (message) {
-      msg.reply(message);
-    }
   }
 
   // VERIFY: verify emailed code
@@ -859,18 +935,11 @@ client.on('message', async (msg) => {
       return;
     }
     let code = args[0];
-    let [err, message] = await verifyAndAddRole(
+    [err, message] = await verify(
       code,
       config.discord.verified_role_name,
       msg.author
     );
-    if (err) {
-      msg.reply('Something went wrong!\n`' + err.message + '`');
-      return;
-    }
-    if (message) {
-      msg.reply(message);
-    }
   }
 
   // PRONOUNS: set pronouns and add to server nickname
@@ -883,13 +952,7 @@ client.on('message', async (msg) => {
     }
 
     let pronouns = args.join(' ').toLowerCase();
-    let [err, message] = await setPronouns(msg.author.id, pronouns);
-    if (err) {
-      msg.reply('Something went wrong!\n`' + err.message + '`');
-    }
-    if (message) {
-      msg.reply(message);
-    }
+    [err, message] = await setPronouns(msg.author.id, pronouns);
   }
 
   // MAJOR: set major in database
@@ -901,13 +964,7 @@ client.on('message', async (msg) => {
       return;
     }
     let major = args.join(' ').toLowerCase();
-    let [err, message] = await setMajor(msg.author.id, major);
-    if (err) {
-      msg.reply('Something went wrong!\n`' + err.message + '`');
-    }
-    if (message) {
-      msg.reply(message);
-    }
+    [err, message] = await setMajor(msg.author.id, major);
   }
 
   // YEAR: set graduation year in database
@@ -919,48 +976,27 @@ client.on('message', async (msg) => {
       return;
     }
     let year = args[0];
-    let [err, message] = await setYear(msg.author.id, year);
-    if (err) {
-      msg.reply('Something went wrong!\n`' + err.message + '`');
-    }
-    if (message) {
-      msg.reply(message);
-    }
+    [err, message] = await setYear(msg.author.id, year);
   }
 
   // TRANSFER: toggle transfer student flag
   else if (command === 'transfer') {
-    let [err, message] = await toggleTransfer(msg.author.id);
-    if (err) {
-      msg.reply('Something went wrong!\n`' + err.message + '`');
-    }
-    if (message) {
-      msg.reply(message);
-    }
+    [err, message] = await toggleTransfer(msg.author.id);
   }
 
   // WHOAMI: who are you???
   else if (command === 'whoami') {
-    let [err, message] = await whoami(msg.author.id);
-    if (err) {
-      msg.reply('Something went wrong!\n`' + err.message + '`');
-      return;
-    }
-    if (message) {
-      msg.reply(message);
-    }
+    [err, message] = await whoami(msg.author.id);
   }
 
-  // LOOKUP: [ADMIN] lookup a user by id or username#disc
-  else if (member.hasPermission('ADMINISTRATOR') && command === 'lookup') {
+  // LOOKUP: [ADMIN/MOD] lookup a user by id or username#disc
+  else if (command === 'lookup' && (member.hasPermission('ADMINISTRATOR') || member.roles.cache.has(mod_role.id))) {
     if (args.length < 1) {
       msg.reply(
         'Invalid command format. Format: `!lookup (<username>#<discriminator> | <userid>)`'
       );
       return;
     }
-
-    let [err, message] = [null, null];
 
     if (args[0].match('.+#([0-9]){4}')) {
       let [username, discriminator] = args[0].split('#');
@@ -969,14 +1005,6 @@ client.on('message', async (msg) => {
 
     else {
       [err, message] = await getUserById(args[0]);
-    }
-
-    if (err) {
-      msg.reply('Something went wrong!\n`' + err.message + '`');
-      return;
-    }
-    if (message) {
-      msg.reply(message);
     }
   }
 
@@ -989,14 +1017,7 @@ client.on('message', async (msg) => {
       return;
     }
 
-    let [err, message] = await getMsg('welcome');
-    if (err) {
-      msg.reply('Something went wrong!\n`' + err.message + '`');
-      return;
-    }
-    if (message) {
-      msg.reply(message);
-    }
+    [err, message] = await getMsg('welcome');
   }
 
   // SET_MESSAGE: [ADMIN] set bot messages of specific type
@@ -1010,14 +1031,7 @@ client.on('message', async (msg) => {
 
     if (args[0] === 'welcome') {
       let welcome_msg = args.slice(1).join(' ');
-      let [err, message] = await setMsg('welcome', welcome_msg);
-      if (err) {
-        msg.reply('Something went wrong!\n`' + err.message + '`');
-        return;
-      }
-      if (message) {
-        msg.reply(message);
-      }
+      [err, message] = await setMsg('welcome', welcome_msg);
     }
 
     else {
@@ -1025,7 +1039,8 @@ client.on('message', async (msg) => {
     }
   }
 
-  else if (command === 'name' && (member.hasPermission('ADMINISTRATOR') || member.roles.cache.find(r => r.name == 'Moderator'))) {
+  // name: [ADMIN/MOD] update user's nickname by userid
+  else if (command === 'name' && (member.hasPermission('ADMINISTRATOR') || member.roles.cache.has(mod_role.id))) {
     if (args.length < 2) {
       msg.reply(
         'Invalid command format. Format: `!name <userid> <new_name>`'
@@ -1034,18 +1049,22 @@ client.on('message', async (msg) => {
     }
     let userid = args[0];
     let nickname = args.slice(1).join(' ');
-    let [err, message] = await updateUserNickname(userid, nickname);
-    if (err) {
-      msg.reply('Something went wrong!\n`' + err.message + '`');
-      return;
-    }
-    if (message) {
-      msg.reply(message);
-    }
+    [err, message] = await updateUserNickname(userid, nickname);
   }
+
   else {
-    msg.reply(`
-Invalid command/format. Please see available commands above.`);
+    [err, message] = [null, 'Invalid command/format. Please see available commands above.'];
+  }
+
+  // on error
+  if (err) {
+    msg.reply('Something went wrong!\n`' + err.message + '`');
+    return;
+  }
+
+  // else send message
+  if (message) {
+    msg.reply(message);
   }
 });
 
