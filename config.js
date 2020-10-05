@@ -8,7 +8,7 @@ module.exports = {
     other: 'o',
   },
   discord: {
-    server_id: '754931521315536937',
+    server_id: '702801010426511373',
     verified_role_name: 'Verified',
   },
   sendgrid: {
