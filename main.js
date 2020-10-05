@@ -318,7 +318,7 @@ WHERE
 // add year in database record
 // linked to YEAR command
 async function setYear(userid, year) {
-  if(!year.match('(?:(?:19|20)[0-9]{2})')) {
+  if(!year.match('^(?:(?:19|20)[0-9]{2})$')) {
     return [null, 'Please enter a valid graduation year.']
   }
 
