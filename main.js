@@ -1022,7 +1022,7 @@ client.on('message', async (msg) => {
     }
   }
 
-  else if (command === 'name' && member.hasPermission('ADMINISTRATOR')) {
+  else if (command === 'name' && (member.hasPermission('ADMINISTRATOR') || member.roles.cache.find(r => r.name == 'Moderator'))) {
     if (args.length < 2) {
       msg.reply(
         'Invalid command format. Format: `!name <userid> <new_name>`'
