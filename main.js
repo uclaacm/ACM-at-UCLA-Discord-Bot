@@ -778,14 +778,15 @@ client.on('guildMemberAdd', async (member) => {
   let firstMsg = '';
   if (row) {
     let server = client.guilds.cache.get(config.discord.server_id);
+    let server_member = server.members.cache.get(member.id);
     let role = server.roles.cache.find((role) => role.name === config.discord.verified_role_name);
-    member.roles.add(role);
+    server_member.roles.add(role);
     if (row.affiliation === 'alumni') {
       let alumni_role = server.roles.cache.find((role) => role.name === 'Alumni');
-      member.roles.add(alumni_role);
+      server_member.roles.add(alumni_role);
     }
 
-    member.setNickname(`${row.nickname} (${row.pronouns})`);
+    server_member.setNickname(`${row.nickname} (${row.pronouns})`);
 
     firstMsg = `
 Welcome back ${row.nickname} (${row.pronouns})!
