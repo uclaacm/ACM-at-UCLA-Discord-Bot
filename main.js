@@ -475,7 +475,7 @@ Use \`!iam <affiliation> <name> <ucla_email>\` and verify your email address.`,
   return [
     null,
     `
-Why, you're ${row.nickname} ${row.pronouns && '('+row.pronouns+')'}) of course!
+Why, you're ${row.nickname} ${row.pronouns && ('('+row.pronouns+')')}) of course!
 Your verified email address is ${row.email}`,
   ];
 }
