@@ -691,7 +691,7 @@ WHERE
 
   let server = client.guilds.cache.get(config.discord.server_id);
   let member = server.members.cache.get(userid);
-  if (member) {
+  if (!member) {
     return [
       null,
       `User not found.`
