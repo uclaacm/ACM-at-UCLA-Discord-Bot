@@ -63,6 +63,9 @@ async function verifyAndSendEmail(userid, email, nickname, affiliation) {
     to: email,
     from: config.sendgrid.sender,
     templateId: config.sendgrid.template_id,
+    asm: {
+      group_id: 15801,
+    },
     dynamic_template_data: {
       nickname: nickname,
       code: code,
