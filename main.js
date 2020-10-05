@@ -181,11 +181,11 @@ VALUES
     null,
     `Thanks ${row.nickname}! You have been verified and can now access the server! Please use the following commands to tell us a bit more about yourself!
 \`\`\`
-!whoami                 | View server name
 !major <valid_major>    | Your major
 !transfer               | Transfer student
 !year <grad_year>       | Your grad year
 !pronouns <pronouns>    | Max 10 characters
+!whoami                 | View server name
 \`\`\`
 `
   ];
@@ -797,11 +797,11 @@ You have been auto-verified with your email address ${row.email}. If you think t
 
 Remember you have access to the following commands:
 \`\`\`
-!whoami                 | View server name
 !major <valid_major>    | Your major
 !transfer               | Transfer student
 !year <grad_year>       | Your grad year
 !pronouns <pronouns>    | Max 10 characters
+!whoami                 | View server name
 \`\`\`
 `;
   }

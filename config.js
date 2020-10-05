@@ -12,7 +12,7 @@ module.exports = {
     verified_role_name: 'Verified',
   },
   sendgrid: {
-    template_id: 'd-b50eca776df84deab80256f097286492',
+    template_id: 'd-81b6d43b226248558115aefa745affeb',
     sender: 'acm@ucla.edu',
   },
   default_msgs: {

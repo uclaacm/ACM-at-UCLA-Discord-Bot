@@ -6,4 +6,4 @@ output/
 backup/
 
 *.db
-
+*.code-workspace
