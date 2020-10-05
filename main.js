@@ -220,6 +220,7 @@ VALUES
 !year <grad_year>       | Your grad year
 !pronouns <pronouns>    | Max 10 characters
 !whoami                 | View server name
+!help                   | Show all commands
 \`\`\`
 ` + (member.roles.cache.has(mod_role.id) ? `
 Since you're a Moderator, you can also use the following commands:
@@ -874,6 +875,7 @@ Remember you have access to the following commands:
 !year <grad_year>       | Your grad year
 !pronouns <pronouns>    | Max 10 characters
 !whoami                 | View server name
+!help                   | Show all commands
 \`\`\`
 ` + (member.roles.cache.has(mod_role.id) ? `
 Since you're a Moderator, you can also use the following commands:
@@ -1052,8 +1054,28 @@ client.on('message', async (msg) => {
     [err, message] = await updateUserNickname(userid, nickname);
   }
 
+  else if (command === 'help') {
+    message = `
+Here's a list of available commands:
+\`\`\`
+!major <valid_major>    | Your major
+!transfer               | Transfer student
+!year <grad_year>       | Your grad year
+!pronouns <pronouns>    | Max 10 characters
+!whoami                 | View server name
+!help                   | Show all commands
+\`\`\`
+` + (member.roles.cache.has(mod_role.id) ? `
+Since you're a Moderator, you can also use the following commands:
+\`\`\`
+!name <userid> <new_name>   | change userids nickname
+!lookup <userid>            | lookup verified user
+\`\`\`
+` : '');
+  }
+
   else {
-    [err, message] = [null, 'Invalid command/format. Please see available commands above.'];
+    [err, message] = [null, 'Invalid command/format. Type `!help` for a list of available commands.'];
   }
 
   // on error
