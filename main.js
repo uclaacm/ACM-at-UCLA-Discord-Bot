@@ -127,7 +127,7 @@ async function verify(code, role_name, author) {
   });
 
   // get member from the ACM server
-  let member = server.members.cache.get(author.id);
+  let member = await server.members.fetch(author.id);
 
   // get iam details from usercodes table
   let row = null;
@@ -293,7 +293,7 @@ WHERE
   await db.close();
 
   // set pronouns in nickname on server
-  let member = server.members.cache.get(userid);
+  let member = await server.members.fetch(userid);
   member.setNickname(`${row.nickname} (${pronouns})`);
 
   return [
@@ -757,7 +757,7 @@ WHERE
   await db.close();
 
   // update nickname on server
-  let member = server.members.cache.get(userid);
+  let member = await server.members.fetch(userid);
   if (!member) {
     return [
       null,
@@ -777,7 +777,7 @@ client.on('ready', async () => {
   console.log(`Logged in as ${client.user.tag}!`);
 
   // find server and required roles
-  server = client.guilds.cache.get(config.discord.server_id);
+  server = await client.guilds.fetch(config.discord.server_id);
   verified_role = server.roles.cache.find((role) => role.name === config.discord.verified_role_name);
   mod_role = server.roles.cache.find((role) => role.name === config.discord.mod_role_name);
   alumni_role = server.roles.cache.find((role) => role.name === config.discord.alumni_role_name);
@@ -857,7 +857,7 @@ client.on('guildMemberAdd', async (member) => {
   let firstMsg = '';
   // auto-verify existing user
   if (row) {
-    let server_member = server.members.cache.get(member.id);
+    let server_member = await server.members.fetch(member.id);
     server_member.roles.add(verified_role);
     if (row.affiliation === 'alumni') {
       server_member.roles.add(alumni_role);
@@ -905,7 +905,7 @@ client.on('message', async (msg) => {
   const args = msg.content.slice(config.cmd_prefix.length).trim().split(' ');
   const command = args.shift().toLowerCase();
 
-  let member = server.members.cache.get(msg.author.id);
+  let member = await server.members.fetch(msg.author.id);
 
   let [err, message] = [null, null];
 
