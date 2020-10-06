@@ -164,9 +164,9 @@ WHERE
   }
 
   // add verified role to user
-  member.roles.add(verified_role);
+  await member.roles.add(verified_role);
   if (row.affiliation === 'alumni') { // and if alumni, add alumni role
-    member.roles.add(alumni_role);
+    await member.roles.add(alumni_role);
   }
 
   // set nickname: <name> (<pronouns>)
@@ -858,9 +858,9 @@ client.on('guildMemberAdd', async (member) => {
   // auto-verify existing user
   if (row) {
     let server_member = await server.members.fetch(member.id);
-    server_member.roles.add(verified_role);
+    await server_member.roles.add(verified_role);
     if (row.affiliation === 'alumni') {
-      server_member.roles.add(alumni_role);
+      await server_member.roles.add(alumni_role);
     }
     server_member.setNickname(row.nickname + (row.pronouns ? ` (${row.pronouns})`: ''));
 
