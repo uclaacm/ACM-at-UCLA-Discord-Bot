@@ -606,7 +606,7 @@ WHERE
   }
   await db.close();
 
-  return [null, await createUserInfoMsg(row, 'User Information', 'Moderator Lookup')];
+  return [null, await createUserInfoMsg(row, 'User Information', `Moderator Lookup on ${row.userid}`)];
 }
 
 // get information on a user by discord username (note: users can change this)
@@ -637,7 +637,7 @@ WHERE
   }
   await db.close();
 
-  return [null, await createUserInfoMsg(row, 'User Information', 'Moderator Lookup')];
+  return [null, await createUserInfoMsg(row, 'User Information', `Moderator Lookup on ${row.userid}`)];
 }
 
 // get message content of specific type
