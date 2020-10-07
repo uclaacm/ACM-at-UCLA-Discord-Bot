@@ -225,8 +225,9 @@ VALUES
 ` + (member.roles.cache.has(mod_role.id) ? `
 Since you're a Moderator, you can also use the following commands:
 \`\`\`
-!name <userid> <new_name>   | change userids nickname
-!lookup <userid>            | lookup verified user
+!name <userid> <new_name>                          | change userids nickname
+!lookup <userid>                                   | lookup verified user
+!stats <verified|major|year|transfer|affiliation>  | Useful for analytics
 \`\`\`
 ` : '')
   ];
@@ -880,8 +881,9 @@ Remember you have access to the following commands:
 ` + (member.roles.cache.has(mod_role.id) ? `
 Since you're a Moderator, you can also use the following commands:
 \`\`\`
-!name <userid> <new_name>   | change userids nickname
-!lookup <userid>            | lookup verified user
+!name <userid> <new_name>                          | change userids nickname
+!lookup <userid>                                   | lookup verified user
+!stats <verified|major|year|transfer|affiliation>  | Useful for analytics
 \`\`\`
 ` : '');
   }
@@ -1068,8 +1070,9 @@ Here's a list of available commands:
 ` + (member.roles.cache.has(mod_role.id) ? `
 Since you're a Moderator, you can also use the following commands:
 \`\`\`
-!name <userid> <new_name>   | change userids nickname
-!lookup <userid>            | lookup verified user
+!name <userid> <new_name>                          | change userids nickname
+!lookup <userid>                                   | lookup verified user
+!stats <verified|major|year|transfer|affiliation>  | Useful for analytics
 \`\`\`
 ` : '');
   }
