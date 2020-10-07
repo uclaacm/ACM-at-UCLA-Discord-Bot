@@ -5,7 +5,8 @@
   "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "./start.sh",
+    "start": "source .env && pm2 start main.js --name discord_bot",
+    "reload": "pm2 reload discord_bot",
     "stop": "pm2 stop discord_bot"
   },
   "author": "entrohpy",
