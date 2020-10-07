@@ -11,6 +11,9 @@ let server = null;
 let verified_role = null;
 let mod_role = null;
 let alumni_role = null;
+const isModOrAdmin = member =>
+  member.hasPermission('ADMINISTRATOR') ||
+    member.roles.cache.has(mod_role.id);
 
 // sendgrid
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
@@ -220,10 +223,10 @@ VALUES
 !transfer               | Transfer student
 !year <grad_year>       | Your grad year
 !pronouns <pronouns>    | Max 10 characters
-!whoami                 | View server name
+!whoami                 | View your information
 !help                   | Show all commands
 \`\`\`
-` + (member.roles.cache.has(mod_role.id) ? `
+` + (isModOrAdmin(member) ? `
 Since you're a Moderator, you can also use the following commands:
 \`\`\`
 !name <userid> <new_name>                          | change userids nickname
@@ -1102,10 +1105,10 @@ Remember you have access to the following commands:
 !transfer               | Transfer student
 !year <grad_year>       | Your grad year
 !pronouns <pronouns>    | Max 10 characters
-!whoami                 | View server name
+!whoami                 | View your information
 !help                   | Show all commands
 \`\`\`
-` + (member.roles.cache.has(mod_role.id) ? `
+` + (isModOrAdmin(member) ? `
 Since you're a Moderator, you can also use the following commands:
 \`\`\`
 !name <userid> <new_name>                          | change userids nickname
@@ -1221,7 +1224,7 @@ client.on('message', async (msg) => {
   }
 
   // LOOKUP: [ADMIN/MOD] lookup a user by id or username#disc
-  else if (command === 'lookup' && (member.hasPermission('ADMINISTRATOR') || member.roles.cache.has(mod_role.id))) {
+  else if (command === 'lookup' && isModOrAdmin(member)) {
     if (args.length < 1) {
       msg.reply(
         'Invalid command format. Format: `!lookup (<username>#<discriminator> | <userid>)`'
@@ -1271,7 +1274,7 @@ client.on('message', async (msg) => {
   }
 
   // name: [ADMIN/MOD] update user's nickname by userid
-  else if (command === 'name' && (member.hasPermission('ADMINISTRATOR') || member.roles.cache.has(mod_role.id))) {
+  else if (command === 'name' && isModOrAdmin(member)) {
     if (args.length < 2) {
       msg.reply(
         'Invalid command format. Format: `!name <userid> <new_name>`'
@@ -1284,7 +1287,7 @@ client.on('message', async (msg) => {
   }
 
   // stats: [ADMIN/MOD] get various stats on verified users
-  else if (command === 'stats' && (member.hasPermission('ADMINISTRATOR') || member.roles.cache.has(mod_role.id))) {
+  else if (command === 'stats' && isModOrAdmin(member)) {
     if (args.length < 1) {
       msg.reply(
         'Invalid command format. Format: `!stats (verified|major|year|transfer|affiliation)`'
@@ -1322,10 +1325,10 @@ Here's a list of available commands:
 !transfer               | Transfer student
 !year <grad_year>       | Your grad year
 !pronouns <pronouns>    | Max 10 characters
-!whoami                 | View server name
+!whoami                 | View your information
 !help                   | Show all commands
 \`\`\`
-` + (member.roles.cache.has(mod_role.id) ? `
+` + (isModOrAdmin(member) ? `
 Since you're a Moderator, you can also use the following commands:
 \`\`\`
 !name <userid> <new_name>                          | change userids nickname
