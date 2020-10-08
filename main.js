@@ -540,10 +540,40 @@ Use \`!iam <affiliation> <name> <ucla_email>\` and verify your email address.`,
 
   return [
     null,
-    `
-Why, you're ${row.nickname} ${(row.pronouns) ? ('('+row.pronouns+')') : ''} of course!
-Your verified email address is ${row.email}`,
+    await createUserInfoMsg(row, 'About You', `Why, you're ${row.nickname} of course!`)
   ];
+}
+
+// create user info message using Discord Message Embed for better formatting
+async function createUserInfoMsg(row, title, description) {
+  if (!row) {
+    return [null, 'User not found/verified.'];
+  }
+
+  let member = await server.members.fetch(row.userid);
+
+  const userInfoEmbed = new Discord.MessageEmbed()
+    .setColor('#FEB81B')
+    .setTitle(title)
+    .setDescription(description)
+    .setThumbnail(member.user.avatarURL())
+    .addFields(
+      { name: 'Username', value: `${row.username}#${row.discriminator}`, inline: true },
+      { name: 'Nickname', value: row.nickname, inline: true },
+      { name: 'Pronouns', value: row.pronouns || '*not set*', inline: true },
+    )
+    .addFields(
+      { name: 'Major', value: row.major || '*not set*', inline: true },
+      { name: 'Year', value: row.grad_year || '*not set*', inline: true },
+      { name: 'Transfer?', value: (row.transfer_flag == 1 ? 'yes' : 'no'), inline: true },
+    )
+    .addFields(
+      { name: 'Affiliation', value: row.affiliation || '*not set*', inline: true },
+      { name: 'Email', value: row.email, inline: true },
+      { name: 'Verified at', value: row.verified_at + ' UTC', inline: true },
+    );
+
+   return userInfoEmbed;
 }
 
 // get information on a user by discord username (note: users can change this)
@@ -575,24 +605,8 @@ WHERE
     return [{ message: e.toString() }, null];
   }
   await db.close();
-  if (!row) {
-    return [null, 'User not found/verified.'];
-  }
 
-  return [
-    null,
-    `
-Userid: ${row.userid}
-Nickname: ${row.nickname}
-Pronouns: ${row.pronouns}
-Email: ${row.email}
-Affiliation: ${row.affiliation}
-Major: ${row.major}
-Year: ${row.grad_year}
-Transfer?: ${row.transfer_flag == 1 ? 'yes' : 'no'}
-Verified at: ${row.verified_at}
-`,
-  ];
+  return [null, await createUserInfoMsg(row, 'User Information', `Moderator Lookup on ${row.userid}`)];
 }
 
 // get information on a user by discord username (note: users can change this)
@@ -622,24 +636,8 @@ WHERE
     return [{ message: e.toString() }, null];
   }
   await db.close();
-  if (!row) {
-    return [null, 'User not found/verified.'];
-  }
 
-  return [
-    null,
-    `
-Userid: ${row.userid}
-Nickname: ${row.nickname}
-Pronouns: ${row.pronouns}
-Email: ${row.email}
-Affiliation: ${row.affiliation}
-Major: ${row.major}
-Year: ${row.grad_year}
-Transfer?: ${row.transfer_flag == 1 ? 'yes' : 'no'}
-Verified at: ${row.verified_at}
-`,
-  ];
+  return [null, await createUserInfoMsg(row, 'User Information', `Moderator Lookup on ${row.userid}`)];
 }
 
 // get message content of specific type
