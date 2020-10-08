@@ -553,7 +553,7 @@ async function createUserInfoMsg(row, title, description) {
   let member = await server.members.fetch(row.userid);
 
   const userInfoEmbed = new Discord.MessageEmbed()
-    .setColor('#FEB81B')
+    .setColor('#1e6cff')
     .setTitle(title)
     .setDescription(description)
     .setThumbnail(member.user.avatarURL())
