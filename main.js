@@ -546,10 +546,6 @@ Use \`!iam <affiliation> <name> <ucla_email>\` and verify your email address.`,
 
 // create user info message using Discord Message Embed for better formatting
 async function createUserInfoMsg(row, title, description) {
-  if (!row) {
-    return [null, 'User not found/verified.'];
-  }
-
   let member = await server.members.fetch(row.userid);
 
   const userInfoEmbed = new Discord.MessageEmbed()
@@ -573,7 +569,7 @@ async function createUserInfoMsg(row, title, description) {
       { name: 'Verified at', value: row.verified_at + ' UTC', inline: true },
     );
 
-   return userInfoEmbed;
+  return userInfoEmbed;
 }
 
 // get information on a user by discord username (note: users can change this)
@@ -606,6 +602,10 @@ WHERE
   }
   await db.close();
 
+  if (!row) {
+    return [null, 'User not found/verified.'];
+  }
+
   return [null, await createUserInfoMsg(row, 'User Information', `Moderator Lookup on ${row.userid}`)];
 }
 
@@ -636,6 +636,10 @@ WHERE
     return [{ message: e.toString() }, null];
   }
   await db.close();
+
+  if (!row) {
+    return [null, 'User not found/verified.'];
+  }
 
   return [null, await createUserInfoMsg(row, 'User Information', `Moderator Lookup on ${row.userid}`)];
 }
