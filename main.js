@@ -179,6 +179,18 @@ WHERE
   try {
     // delete usercode entry
     await db.run('DELETE FROM usercodes WHERE userid = ?', [author.id]);
+
+    // check if email is already verified
+    // it's possible for two users to request a code on the same email
+    // until any of the users has actually used the code!
+    let emailExists = null;
+    // TODO: treat .*.ucla.edu the same as ucla.edu for existence check
+    emailExists = await db.get('SELECT * FROM users WHERE email = ?', [row.email]);
+    if (emailExists) {
+      await db.close();
+      return [null, 'This email has already been verified. If you own this email address, please contact any of the Moderators.'];
+    }
+
     // add to users db (stores verified users)
     await db.run(
       `
