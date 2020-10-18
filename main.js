@@ -1143,7 +1143,13 @@ Since you're a Moderator, you can also use the following commands:
 client.on('message', async (msg) => {
   // ignore bots, non-dms, and non-commands
   // TODO: allow non-dms for moderator commands
-  if (msg.author.bot || msg.channel.type !== 'dm' || !msg.content.startsWith(config.cmd_prefix)) {
+  if (msg.author.bot || !msg.content.startsWith(config.cmd_prefix)) {
+    return;
+  }
+
+  const allowed_channels = ['🚓moderators'];
+  console.log(msg.channel.name);
+  if (msg.channel.type !== 'dm' && !allowed_channels.includes(msg.channel.name)) {
     return;
   }
 
