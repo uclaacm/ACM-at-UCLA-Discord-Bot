@@ -1148,13 +1148,12 @@ client.on('message', async (msg) => {
   }
 
   const allowed_channels = ['🚓moderators'];
-  console.log(msg.channel.name);
   if (msg.channel.type !== 'dm' && !allowed_channels.includes(msg.channel.name)) {
     return;
   }
 
   // parse input command and args
-  const args = msg.content.slice(config.cmd_prefix.length).trim().split(' ');
+  const args = msg.content.slice(config.cmd_prefix.length).trim().split(/ +/);
   const command = args.shift().toLowerCase();
 
   let member = await server.members.fetch(msg.author.id);
