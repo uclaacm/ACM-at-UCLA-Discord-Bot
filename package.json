@@ -7,7 +7,9 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "source .env && pm2 start main.js --name discord_bot",
     "reload": "pm2 reload discord_bot",
-    "stop": "pm2 stop discord_bot"
+    "stop": "pm2 stop discord_bot",
+    "lint": "eslint \"**/*.js\"",
+    "lint-fix": "eslint --fix \"**/*.js\""
   },
   "author": "entrohpy",
   "repository": {
