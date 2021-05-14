@@ -3,7 +3,7 @@ const sgMail = require('@sendgrid/mail');
 const sqlite = require('sqlite');
 const sqlite3 = require('sqlite3');
 const AsciiTable = require('ascii-table');
-const config = require('./config');
+const config = require('./config.'+process.env.NODE_ENV_MODE);
 
 // discord
 const client = new Discord.Client();
@@ -80,7 +80,7 @@ async function iam(userid, email, nickname, affiliation) {
     from: config.sendgrid.sender,
     templateId: config.sendgrid.template_id,
     asm: {
-      group_id: 15801,
+      group_id: config.sendgrid.group_id,
     },
     dynamic_template_data: {
       nickname: nickname,
