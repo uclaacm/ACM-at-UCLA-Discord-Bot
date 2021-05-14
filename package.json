@@ -5,8 +5,8 @@
   "main": "main.js",
   "scripts": {
     "test": "jest --verbose ./test",
-    "start": "source .env && pm2 start main.js --name discord_bot",
-    "dev": "source .env && pm2 start main.js --name discord_bot",
+    "start": "pm2 start main.js --name discord_bot",
+    "dev": "pm2 start main.js --name discord_bot",
     "reload": "pm2 reload discord_bot",
     "stop": "pm2 stop discord_bot"
   },
@@ -19,6 +19,7 @@
     "@sendgrid/mail": "^7.2.5",
     "ascii-table": "0.0.9",
     "discord.js": "^12.5.3",
+    "dotenv": "^9.0.2",
     "sqlite": "^4.0.21",
     "sqlite3": "^5.0.2"
   },
