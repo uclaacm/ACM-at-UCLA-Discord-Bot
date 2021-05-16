@@ -58,7 +58,7 @@ const iam = async function (userid, email, nickname, affiliation, sgMail) {
     }
   
     // send 6-digit code to provided email
-    const code = genCode(6);
+    const code = genCode(config.discord.gen_code_length);
     const msg = {
       to: email,
       from: config.sendgrid.sender,
