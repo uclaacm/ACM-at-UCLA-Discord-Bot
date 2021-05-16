@@ -65,4 +65,4 @@ const setMsg = async function (type, msg) {
   ];
 };
 
-module.exports = {getMsg};
+module.exports = {getMsg, setMsg};
