@@ -8,14 +8,16 @@ module.exports = {
     other: 'o',
   },
   discord: {
-    server_id: '702801010426511373',
+    server_id: '842102423345823765',
+    gen_code_length: 6,
     verified_role_name: 'Verified',
     mod_role_name: 'Moderator',
     alumni_role_name: 'Alumni',
   },
   sendgrid: {
-    template_id: 'd-81b6d43b226248558115aefa745affeb',
-    sender: 'acm@ucla.edu',
+    template_id: 'd-94f6493745b043d5ac07a59379a2d382',
+    group_id: 15831,
+    sender: 'rnema@ucla.edu',
   },
   default_msgs: {
     welcome: `
