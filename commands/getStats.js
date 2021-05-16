@@ -30,17 +30,17 @@ const getNumVerifiedStats = async function () {
     return [
       null,
       `
-  No stats available on verified users.`,
+No stats available on verified users.`,
     ];
   }
   
   return [
     null,
     `
-  \`\`\`
-  Number of Verified Users: ${row.count}
-  \`\`\`
-      `
+\`\`\`
+Number of Verified Users: ${row.count}
+\`\`\`
+`
   ];
 };
 
@@ -73,7 +73,7 @@ const getMajorStats = async function () {
     return [
       null,
       `
-  No stats available on majors.`,
+No stats available on majors.`,
     ];
   }
   
@@ -84,10 +84,10 @@ const getMajorStats = async function () {
   return [
     null,
     `
-  \`\`\`
-  ${majorTable.toString()}
-  \`\`\`
-      `
+\`\`\`
+${majorTable.toString()}
+\`\`\`
+`
   ];
 };
 
@@ -120,7 +120,7 @@ const getYearStats = async function () {
     return [
       null,
       `
-  No stats available on graduation years.`,
+No stats available on graduation years.`,
     ];
   }
   
@@ -131,10 +131,10 @@ const getYearStats = async function () {
   return [
     null,
     `
-  \`\`\`
-  ${yearTable.toString()}
-  \`\`\`
-      `
+\`\`\`
+${yearTable.toString()}
+\`\`\`
+`
   ];
 };
 
@@ -166,17 +166,17 @@ const getNumTransferStats = async function () {
     return [
       null,
       `
-  No stats available on transfer students.`,
+No stats available on transfer students.`,
     ];
   }
   
   return [
     null,
     `
-  \`\`\`
-  Number of Transfer Students: ${row.count}
-  \`\`\`
-      `
+\`\`\`
+Number of Transfer Students: ${row.count}
+\`\`\`
+`
   ];
 };
 
@@ -209,7 +209,7 @@ const getAffiliationStats = async function () {
     return [
       null,
       `
-  No stats available on affiliation.`,
+No stats available on affiliation.`,
     ];
   }
   
@@ -220,10 +220,10 @@ const getAffiliationStats = async function () {
   return [
     null,
     `
-  \`\`\`
-  ${affilTable.toString()}
-  \`\`\`
-      `
+\`\`\`
+${affilTable.toString()}
+\`\`\`
+`
   ];
 };
 

@@ -61,8 +61,8 @@ const whoami = async function (userid, server, Discord) {
     return [
       null,
       `
-    Hmmm I'm really not sure myself but I'd love to get to know you!
-    Use \`!iam <affiliation> <name> <ucla_email>\` and verify your email address.`,
+Hmmm I'm really not sure myself but I'd love to get to know you!
+Use \`!iam <affiliation> <name> <ucla_email>\` and verify your email address.`,
     ];
   }
     

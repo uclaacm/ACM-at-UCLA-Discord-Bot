@@ -38,8 +38,8 @@ const setPronouns = async function (userid, pronouns, server) {
     return [
       null,
       `
-    Sorry, I don't think you're verified!.
-    Use \`!iam <affiliation> <name> <ucla_email>\` to verify your email address.`,
+Sorry, I don't think you're verified!.
+Use \`!iam <affiliation> <name> <ucla_email>\` to verify your email address.`,
     ];
   }
     
@@ -68,8 +68,9 @@ const setPronouns = async function (userid, pronouns, server) {
     
   return [
     null,
-    `Successfully added your pronouns (${pronouns}) to your name in the server.
-    Thank you for making the server more inclusive!`
+    `
+Successfully added your pronouns (${pronouns}) to your name in the server.
+Thank you for making the server more inclusive!`
   ];
 };
 
@@ -109,8 +110,8 @@ const setMajor = async function (userid, major) {
     return [
       null,
       `
-    Sorry, I don't think you're verified!.
-    Use \`!iam <affiliation> <name> <ucla_email>\` and verify your email address.`,
+Sorry, I don't think you're verified!.
+Use \`!iam <affiliation> <name> <ucla_email>\` and verify your email address.`,
     ];
   }
     
@@ -175,8 +176,8 @@ const setYear = async function (userid, year) {
     return [
       null,
       `
-    Sorry, I don't think you're verified!.
-    Use \`!iam <affiliation> <name> <ucla_email>\` and verify your email address.`,
+Sorry, I don't think you're verified!.
+Use \`!iam <affiliation> <name> <ucla_email>\` and verify your email address.`,
     ];
   }
     
@@ -236,8 +237,8 @@ const toggleTransfer = async function (userid) {
     return [
       null,
       `
-    Sorry, I don't think you're verified!.
-    Use \`!iam <affiliation> <name> <ucla_email>\` and verify your email address.`,
+Sorry, I don't think you're verified!.
+Use \`!iam <affiliation> <name> <ucla_email>\` and verify your email address.`,
     ];
   }
     
@@ -299,7 +300,7 @@ const updateUserNickname = async function (userid, nickname, server) {
     return [
       null,
       `
-    Invalid/unverified user.`,
+Invalid/unverified user.`,
     ];
   }
     
