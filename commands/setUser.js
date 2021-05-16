@@ -2,10 +2,9 @@ const sqlite = require('sqlite');
 const sqlite3 = require('sqlite3');
 const config = require('../config');
 
-module.exports = {
-    // add pronouns to nickname
-    // linked to PRONOUNS command
-    "setPronouns" : async function (userid, pronouns, server) {
+// add pronouns to nickname
+// linked to PRONOUNS command
+const setPronouns = async function (userid, pronouns, server) {
         // pronouns string should be less than 11 chars
         if (pronouns.length > 10) {
         return [null, 'Please enter something shorter (max 10 characters).'];
@@ -72,11 +71,11 @@ module.exports = {
         `Successfully added your pronouns (${pronouns}) to your name in the server.
     Thank you for making the server more inclusive!`
         ];
-    },
+}
 
-    // add major in database record
-    // linked to MAJOR command
-    "setMajor" : async function (userid, major) {
+// add major in database record
+// linked to MAJOR command
+const setMajor = async function (userid, major) {
         // check major against official list
         if (!config.majors_list.includes(major)) {
         return [null, 'Sorry, I don\'t recognize your major! Please refer to https://catalog.registrar.ucla.edu/ucla-catalog20-21-5.html for valid major names (e.g. Computer Science).'];
@@ -138,11 +137,11 @@ module.exports = {
         null,
         `Successfully added your major (${major}). Thank you!`
         ];
-    },
+}
 
-    // add year in database record
-    // linked to YEAR command
-    "setYear" : async function (userid, year) {
+// add year in database record
+// linked to YEAR command
+const setYear = async function (userid, year) {
         // validate year (1900-2099)
         if(!year.match('^(?:(?:19|20)[0-9]{2})$')) {
         return [null, 'Please enter a valid graduation year.']
@@ -204,12 +203,11 @@ module.exports = {
         null,
         `Successfully added your graduation year (${year}). Thank you!`
         ];
-    },
+}
 
-
-    // toggle transfer student flag
-    // linked to TRANSFER command
-    "toggleTransfer" : async function (userid) {
+// toggle transfer student flag
+// linked to TRANSFER command
+const toggleTransfer = async function (userid) {
         // open db
         let db = await sqlite.open({
         filename: config.db_path,
@@ -266,9 +264,9 @@ module.exports = {
         null,
         `Successfully ${row.transfer_flag == 1 ? 'un' : ''}marked you as a transfer student. Thank you!`
         ];
-    },
+}
 
-    "updateUserNickname" : async function (userid, nickname, server) {
+const updateUserNickname = async function (userid, nickname, server) {
         // nickname length should be less than 20 chars
         if (nickname.length > 19) {
         return [null, 'Please enter a shorter name (max 19 characters).'];
@@ -338,5 +336,6 @@ module.exports = {
         null,
         `Successfully changed: ${row.nickname} -> ${nickname}.`
         ];
-    }
 }
+
+modules.exports = {setPronouns, setMajor, setYear, toggleTransfer, updateUserNickname};

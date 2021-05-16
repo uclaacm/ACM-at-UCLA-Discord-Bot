@@ -3,10 +3,9 @@ const sqlite3 = require('sqlite3');
 const AsciiTable = require('ascii-table');
 const config = require('../config');
 
-module.exports = {
-  // get number of verified users
-  // linked to STATS command
-  "getNumVerifiedStats" : async function () {
+// get number of verified users
+// linked to STATS command
+const getNumVerifiedStats = async function () {
     // open db
     let db = await sqlite.open({
       filename: config.db_path,
@@ -43,11 +42,11 @@ module.exports = {
   \`\`\`
       `
     ];
-  },
+}
 
-  // get count of each major
-  // linked to STATS command
-  "getMajorStats" : async function () {
+// get count of each major
+// linked to STATS command
+const getMajorStats = async function () {
     // open db
     let db = await sqlite.open({
       filename: config.db_path,
@@ -90,13 +89,11 @@ module.exports = {
   \`\`\`
       `
     ];
-  },
+}
 
-
-
-  // get count of each graduation year
-  // linked to STATS command
-  "getYearStats" : async function () {
+// get count of each graduation year
+// linked to STATS command
+const getYearStats = async function () {
     // open db
     let db = await sqlite.open({
       filename: config.db_path,
@@ -141,9 +138,9 @@ module.exports = {
     ];
   },
 
-  // get number of transfers
-  // linked to STATS command
-  "getNumTransferStats" : async function () {
+// get number of transfers
+// linked to STATS command
+const getNumTransferStats = async function () {
     // open db
     let db = await sqlite.open({
       filename: config.db_path,
@@ -181,12 +178,11 @@ module.exports = {
   \`\`\`
       `
     ];
-  },
+}
 
-
-  // get count of each affiliation
-  // linked to STATS command
-  "getAffiliationStats" : async function () {
+// get count of each affiliation
+// linked to STATS command
+const getAffiliationStats = async function () {
     // open db
     let db = await sqlite.open({
       filename: config.db_path,
@@ -229,5 +225,7 @@ module.exports = {
   \`\`\`
       `
     ];
-  }
 }
+
+module.exports = {getNumVerifiedStats, getMajorStats, getYearStats, 
+  getNumTransferStats, getAffiliationStats};

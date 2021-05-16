@@ -13,8 +13,7 @@ function genCode(n) {
 
 // if email has not been verified, send verification code
 // linked to IAM command
-module.exports = {
- "iam" : async function (userid, email, nickname, affiliation, sgMail) {
+const iam = async function (userid, email, nickname, affiliation, sgMail) {
     // check email against allowed domains
     let domain = email.match(
       '^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+.)?[a-zA-Z]+.)?(' +
@@ -104,5 +103,6 @@ module.exports = {
       null,
       `Please check your email \`${email}\` for a 6-digit verification code. Verify using \`!verify <code>\``,
     ];
-  }
 }
+
+modules.exports = {iam};

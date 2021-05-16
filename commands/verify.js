@@ -8,8 +8,7 @@ member.hasPermission('ADMINISTRATOR') ||
 
 // verify code and and role to access server
 // linked to VERIFY command
-module.exports = {
-  "verify" : async function (code, author, server, verified_role, mod_role, alumni_role) {
+const verify = async function (code, author, server, verified_role, mod_role, alumni_role) {
       // open db
       let db = await sqlite.open({
         filename: config.db_path,
@@ -133,5 +132,6 @@ module.exports = {
     \`\`\`
     ` : '')
       ];
-    }
 }
+
+modules.exports = {verify};

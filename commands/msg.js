@@ -2,10 +2,9 @@ const sqlite = require('sqlite');
 const sqlite3 = require('sqlite3');
 const config = require('../config');
 
-module.exports = {
-    // set message of specific type
-    // linked to SET_MESSAGE command
-    "getMsg" : async function (type) {
+// set message of specific type
+// linked to SET_MESSAGE command
+const getMsg = async function (type) {
         // open db
         let db = await sqlite.open({
         filename: config.db_path,
@@ -33,11 +32,11 @@ module.exports = {
         null,
         row.message
         ];
-    },
+}
 
-    // get message content of specific type
-    // linked to GET_MESSAGE command
-    "setMsg" : async function (type, msg) {
+// get message content of specific type
+// linked to GET_MESSAGE command
+const setMsg = async function (type, msg) {
         // open db
         let db = await sqlite.open({
         filename: config.db_path,
@@ -64,5 +63,6 @@ module.exports = {
         null,
         `Successfully changed the ${type} message!`
         ];
-    }
 }
+
+modules.exports = {getMsg};

@@ -30,10 +30,9 @@ async function createUserInfoMsg(row, title, description, server, Discord) {
     return userInfoEmbed;
 }
 
-module.exports = {
-    // who are you???
-    // linked to WHOAMI command
-    "whoami" : async function (userid, server, Discord) {
+// who are you???
+// linked to WHOAMI command
+const whoami = async function (userid, server, Discord) {
         // open db
         let db = await sqlite.open({
         filename: config.db_path,
@@ -71,12 +70,12 @@ module.exports = {
         null,
         await createUserInfoMsg(row, 'About You', `Why, you're ${row.nickname} of course!`, server, Discord)
         ];
-    },
+}
 
-    // get information on a user by discord username (note: users can change this)
-    // only `userid` is invariant. Use getUserById
-    // linked to LOOKUP command
-    "getUserByUsername" : async function (username, discriminator, server, Discord) {
+// get information on a user by discord username (note: users can change this)
+// only `userid` is invariant. Use getUserById
+// linked to LOOKUP command
+const getUserByUsername = async function (username, discriminator, server, Discord) {
         // open db
         let db = await sqlite.open({
         filename: config.db_path,
@@ -108,11 +107,11 @@ module.exports = {
         }
     
         return [null, await createUserInfoMsg(row, 'User Information', `Moderator Lookup on ${row.userid}`, server, Discord)];
-    },
+}
 
-    // get information on a user by discord username (note: users can change this)
-    // linked to LOOKUP command
-    "getUserById" : async function (userid, server, Discord) {
+// get information on a user by discord username (note: users can change this)
+// linked to LOOKUP command
+const getUserById = async function (userid, server, Discord) {
         // open db
         let db = await sqlite.open({
         filename: config.db_path,
@@ -143,5 +142,6 @@ module.exports = {
         }
     
         return [null, await createUserMessage.createUserInfoMsg(row, 'User Information', `Moderator Lookup on ${row.userid}`, server, Discord)];
-    }
 }
+
+modules.exports = {whoami, getUserByUsername, getUserById};
