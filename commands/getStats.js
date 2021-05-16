@@ -1,7 +1,7 @@
 const sqlite = require('sqlite');
 const sqlite3 = require('sqlite3');
 const AsciiTable = require('ascii-table');
-const config = require('../config');
+const config = require('../config.'+process.env.NODE_ENV_MODE);
 
 // get number of verified users
 // linked to STATS command

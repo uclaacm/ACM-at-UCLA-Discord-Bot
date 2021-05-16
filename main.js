@@ -3,8 +3,6 @@ const Discord = require('discord.js');
 const sgMail = require('@sendgrid/mail');
 const sqlite = require('sqlite');
 const sqlite3 = require('sqlite3');
-
-const AsciiTable = require('ascii-table');
 const config = require('./config.'+process.env.NODE_ENV_MODE);
 
 // discord
