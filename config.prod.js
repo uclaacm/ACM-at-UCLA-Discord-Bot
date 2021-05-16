@@ -13,7 +13,6 @@ module.exports = {
     verified_role_name: 'Verified',
     mod_role_name: 'Moderator',
     alumni_role_name: 'Alumni',
-    gen_code_length: 6,
   },
   sendgrid: {
     template_id: 'd-81b6d43b226248558115aefa745affeb',
