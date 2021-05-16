@@ -9,6 +9,7 @@ module.exports = {
   },
   discord: {
     server_id: '842102423345823765',
+    gen_code_length: 6,
     verified_role_name: 'Verified',
     mod_role_name: 'Moderator',
     alumni_role_name: 'Alumni',

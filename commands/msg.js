@@ -1,6 +1,6 @@
 const sqlite = require('sqlite');
 const sqlite3 = require('sqlite3');
-const config = require('../config');
+const config = require('../config.'+process.env.NODE_ENV_MODE);
 
 // set message of specific type
 // linked to SET_MESSAGE command
