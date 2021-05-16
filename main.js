@@ -18,25 +18,25 @@ const isModOrAdmin = member =>
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 // load commands
-const command_iam = require("./commands/iam");
-const command_verify = require("./commands/verify");
+const command_iam = require('./commands/iam');
+const command_verify = require('./commands/verify');
 
 // set user info
 // contains: setPronouns, setMajor, setYear, toggleTransfer, updateUserNickname
-const command_setUser = require("./commands/setUser");
+const command_setUser = require('./commands/setUser');
 
 // get user info
 // contains: whoami, getUserByUsername, getUserByID
-const command_getUser = require("./commands/getUser");
+const command_getUser = require('./commands/getUser');
 
 // msg
 // contains: getMsg, setMsg
-const command_msg = require("./commands/msg");
+const command_msg = require('./commands/msg');
 
 // getStats
 // contains: getNumVerifiedStats, getMajorStats, getYearStats
 // getNumTransferStats, getAffiliationStats
-const command_getStats = require("./commands/getStats")
+const command_getStats = require('./commands/getStats');
 
 
 // on ready, create db and tables if they don't already exist
@@ -94,7 +94,7 @@ client.on('ready', async () => {
 
   // set default welcome message
   let welcome_msg = config.default_msgs.welcome;
-  await db.run(`INSERT OR IGNORE INTO messages(message_id, message) VALUES ('welcome', ?)`, [welcome_msg]);
+  await db.run('INSERT OR IGNORE INTO messages(message_id, message) VALUES (\'welcome\', ?)', [welcome_msg]);
 
   await db.close();
 });
@@ -113,7 +113,7 @@ client.on('guildMemberAdd', async (member) => {
   try {
     let {message} = await db.get('SELECT message FROM messages WHERE message_id = ?', 'welcome');
     welcome_msg = message;
-    row = await db.get('SELECT * FROM users WHERE userid = ?', [member.id])
+    row = await db.get('SELECT * FROM users WHERE userid = ?', [member.id]);
   } catch (e) {
     console.error(e.toString());
     await db.close();
@@ -343,23 +343,23 @@ client.on('message', async (msg) => {
 
     let option = args[0].toLowerCase();
     switch (option) {
-      case 'verified': // number of verified users
-        [err, message] = await command_getStats.getNumVerifiedStats();
-        break;
-      case 'major': // breakdown of majors by count
-        [err, message] = await command_getStats.getMajorStats();
-        break;
-      case 'year': // breakdown of graduation year by count
-        [err, message] = await command_getStats.getYearStats();
-        break;
-      case 'transfer': // number of transfer students
-        [err, message] = await command_getStats.getNumTransferStats();
-        break;
-      case 'affiliation': // breakdown of affiliation by count
-        [err, message] = await command_getStats.getAffiliationStats();
-        break;
-      default:
-        message = 'Please enter a valid stat type (verified|major|year|transfer|affiliation)';
+    case 'verified': // number of verified users
+      [err, message] = await command_getStats.getNumVerifiedStats();
+      break;
+    case 'major': // breakdown of majors by count
+      [err, message] = await command_getStats.getMajorStats();
+      break;
+    case 'year': // breakdown of graduation year by count
+      [err, message] = await command_getStats.getYearStats();
+      break;
+    case 'transfer': // number of transfer students
+      [err, message] = await command_getStats.getNumTransferStats();
+      break;
+    case 'affiliation': // breakdown of affiliation by count
+      [err, message] = await command_getStats.getAffiliationStats();
+      break;
+    default:
+      message = 'Please enter a valid stat type (verified|major|year|transfer|affiliation)';
     }
   }
 
