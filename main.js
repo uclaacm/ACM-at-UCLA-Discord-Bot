@@ -171,7 +171,6 @@ client.on('message', async (msg) => {
   }
 
   const allowed_channels = ['🚓moderators'];
-  console.log(msg.channel.name);
   if (msg.channel.type !== 'dm' && !allowed_channels.includes(msg.channel.name)) {
     return;
   }
