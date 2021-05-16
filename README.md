@@ -10,7 +10,7 @@ Verified usernames are stored with their email address in an `sqlite3` database 
 ### SendGrid
 
 - get an API key and put it in `.env`  (read below)
-- put the sender email address in `config.js` (read below)
+- put the sender email address in `config.prod.js` (read below)
 
 - create a dynamic template with the following handlebars
   - `{{nickname}}`
@@ -21,7 +21,7 @@ Verified usernames are stored with their email address in an `sqlite3` database 
 
 ### Discord App
 
-- put the Server ID in `config.js` (read below)
+- put the Server ID in `config.prod.js` (read below)
 - get an API key for your application and put it in `.env` (read below)
 
 
@@ -33,13 +33,14 @@ Create a `.env` file to store all your secret tokens and API Keys.
 ```bash
 echo "export SENDGRID_API_KEY=<insert_sendgrid_api_key>" >> .env
 echo "export DISCORD_API_KEY=<insert_discord_app_api_key>" >> .env
+echo "export NODE_ENV_MODE=(prod|dev)" >> .env
 ```
 
 
 
 ### Config file
 
-Use `config.js` to set the following parameters,
+Use `config.prod.js` to set the following parameters,
 
 ```js
 {
@@ -64,3 +65,7 @@ Use `config.js` to set the following parameters,
 npm run start
 ```
 
+or for development,
+```bash
+npm run dev
+```
