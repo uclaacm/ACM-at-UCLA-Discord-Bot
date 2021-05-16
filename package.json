@@ -6,7 +6,7 @@
   "scripts": {
     "test": "jest --verbose ./test",
     "start": "source .env && pm2 start main.js --name discord_bot --update-env",
-    "dev": "source .env && pm2 start main.js --name discord_bot --update-env",
+    "dev": "source .env && node main.js",
     "reload": "source .env && pm2 reload discord_bot --update-env",
     "stop": "pm2 stop discord_bot"
   },
