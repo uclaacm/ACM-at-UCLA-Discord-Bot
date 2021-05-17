@@ -64,7 +64,7 @@ const iam = async function (userid, email, nickname, affiliation, sgMail) {
     from: config.sendgrid.sender,
     templateId: config.sendgrid.template_id,
     asm: {
-      group_id: 15831,
+      group_id: config.sendgrid.group_id,
     },
     dynamic_template_data: {
       nickname: nickname,

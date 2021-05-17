@@ -1,4 +1,4 @@
-const dotenv = require('dotenv').config();
+require('dotenv').config();
 const Discord = require('discord.js');
 const sgMail = require('@sendgrid/mail');
 const sqlite = require('sqlite');
