@@ -8,7 +8,9 @@
     "start": "source .env && pm2 start main.js --name discord_bot --update-env",
     "dev": "source .env && node main.js",
     "reload": "source .env && pm2 reload discord_bot --update-env",
-    "stop": "pm2 stop discord_bot"
+    "stop": "pm2 stop discord_bot",
+    "lint": "eslint \"**/*.js\"",
+    "lint-fix": "eslint --fix \"**/*.js\""
   },
   "author": "entrohpy",
   "repository": {
@@ -27,6 +29,7 @@
     "@typescript-eslint/eslint-plugin": "^4.22.0",
     "@typescript-eslint/parser": "^4.22.0",
     "eslint": "^7.26.0",
+    "eslint-plugin-jest": "^24.3.6",
     "jest": "^26.6.3"
   }
 }
