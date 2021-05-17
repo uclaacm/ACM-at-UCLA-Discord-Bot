@@ -15,8 +15,8 @@ module.exports = {
     alumni_role_name: 'Alumni',
   },
   sendgrid: {
-    template_id: 'd-81b6d43b226248558115aefa745affeb',
-    group_id: 15801,
+    template_id: 'd-b50eca776df84deab80256f097286492',
+    group_id: 15736,
     sender: 'acm@ucla.edu',
   },
   default_msgs: {
