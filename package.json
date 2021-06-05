@@ -21,7 +21,7 @@
     "@sendgrid/mail": "^7.2.5",
     "ascii-table": "0.0.9",
     "discord.js": "^12.5.3",
-    "dotenv": "^9.0.2",
+    "dotenv": "^10.0.0",
     "sqlite": "^4.0.21",
     "sqlite3": "^5.0.2"
   },
