@@ -264,29 +264,23 @@ client.on('ready', async () => {
 
 
 client.ws.on('INTERACTION_CREATE', async interaction => {
-  console.log(interaction);
   const command  = interaction.data.name.toLowerCase();
   const userId = interaction.member.user.id;
   const args = interaction.data.options;
   let member = await server.members.fetch(userId);
   let channel = await server.channels.cache.get(interaction.channel_id);
-  console.log(channel);
+
+  const allowed_channels = ['🚓moderators', '🤖bot-commands'];
+
+  let [err, message, embed] = [null, null, false];
 
   if(member.user.bot) {
-    // TODO: do something for bots (i.e. send message or delete interaction)
-    return; //message = "Sorry, bots cannot invoke commands";
+    message = "Sorry, bots cannot invoke commands";
   }
-
-  const allowed_channels = ['moderators', '🤖bot-commands'];
-
-  if (!allowed_channels.includes(channel.name)) {
-    // TODO: do something for non-allowed channels (i.e. send message or delete interaction)
-    return;
+  else if (!allowed_channels.includes(channel.name)) {
+    message = "Slash commands are not allowed in this channel. Please try again in " + (member.hasPermission('ADMINISTRATOR') ? "moderators or " : "") + "bot-commands.";
   }
-
-  let [err, message] = [null, null];
-
-  if(command === "iam") {
+  else if(command === "iam") {
     let affiliation = args[0].value.toLowerCase();
     let nickname = args[1].value;
     let email = args[2].value.toLowerCase();
@@ -298,12 +292,12 @@ client.ws.on('INTERACTION_CREATE', async interaction => {
       sgMail
     );
   }
+  // TODO: fix verify (msg.author)
   else if(command === "verify") {
     let code = args[0].value;
     [err, message] = await command_verify.verify(
       code,
-      msg.author,
-      server,
+      member,
       verified_role,
       mod_role,
       alumni_role
@@ -314,7 +308,7 @@ client.ws.on('INTERACTION_CREATE', async interaction => {
     [err, message] = await command_setUser.setPronouns(userId, pronouns, server);
   }
   else if(command === "major") {
-    let major = args[0].value;
+    let major = args[0].value.toLowerCase();
     [err, message] = await command_setUser.setMajor(userId, major);
   }
   else if(command === "year") {
@@ -324,20 +318,18 @@ client.ws.on('INTERACTION_CREATE', async interaction => {
   else if(command === "transfer") {
     [err, message] = await command_setUser.toggleTransfer(userId);
   }
-  // TODO: fix whoami (ephemeral)
   else if(command === "whoami") {
-    [err, message] = await command_getUser.whoami(userId, server, Discord);
+    [err, message, embed] = await command_getUser.whoami(userId, server, Discord);
   }
-  // TODO: fix lookup (ephemeral)
   else if(command === "lookup" && isModOrAdmin(member)) {
     let userData = args[0].value;
     if (userData.match('.+#([0-9]){4}')) {
       let [username, discriminator] = userData.split('#');
-      [err, message] = await command_getUser.getUserByUsername(username, discriminator, server, Discord);
+      [err, message, embed] = await command_getUser.getUserByUsername(username, discriminator, server, Discord);
     }
 
     else {
-      [err, message] = await command_getUser.getUserById(userData, server, Discord);
+      [err, message, embed] = await command_getUser.getUserById(userData, server, Discord);
     }
   }
   else if(command === "get_message" && member.hasPermission('ADMINISTRATOR')) {
@@ -356,7 +348,7 @@ client.ws.on('INTERACTION_CREATE', async interaction => {
     }
     [err, message] = await command_msg.getMsg(type);
   }
-  // TODO: DiscordAPIError
+  // NOTE: whenever nicknames are being set anywhere, bot can only set nicknames for people that have roles lower than bot (otherwise causes DiscordAPIError: Missing Permissions)
   else if(command === "name" && isModOrAdmin(member)) {
     let userid = args[0].value;
     let nickname = args[1].value;
@@ -408,15 +400,30 @@ Since you're a Moderator, you can also use the following commands:
     [err, message] = [null, 'Invalid command/format. Type `/help` for a list of available commands.'];
   }
 
-  client.api.interactions(interaction.id, interaction.token).callback.post({
-    data: {
-      type: 4,
+  if(embed) {
+    client.api.interactions(interaction.id, interaction.token).callback.post({
       data: {
-        flags: 64,
-        content: err ? ('Something went wrong!\n`' + err.message + '`') : message,
+        type: 4,
+        data: {
+          flags: 64,
+          embeds: [
+            message
+          ]
+        }
       }
-    }
-  })
+    })
+  }
+  else {
+    client.api.interactions(interaction.id, interaction.token).callback.post({
+      data: {
+        type: 4,
+        data: {
+          flags: 64,
+          content: err ? ('Something went wrong!\n`' + err.message + '`') : message,
+        }
+      }
+    })
+  }
 })
 
 // on new user, dm them with info and verification instructions
