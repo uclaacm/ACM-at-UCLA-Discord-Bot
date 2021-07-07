@@ -28,7 +28,7 @@ To keep the server a safe place for everyone,  please verify yourself using your
 **By verifying, you agree to the rules and guidelines posted in #:information_source:server-info**
 To obtain your verification code, reply to this message with the following command:
 \`\`\`MD
-!iam <affiliation> <name> <ucla_email>
+/iam <affiliation> <name> <ucla_email>
 \`\`\`
 `,
   },

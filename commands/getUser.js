@@ -38,7 +38,7 @@ const whoami = async function (userid, server, Discord) {
     filename: config.db_path,
     driver: sqlite3.Database,
   });
-    
+
   // check if user is verified
   let row = null;
   try {
@@ -54,7 +54,7 @@ const whoami = async function (userid, server, Discord) {
   } catch (e) {
     console.error(e.toString());
     await db.close();
-    return [{ message: e.toString() }, null];
+    return [{ message: e.toString() }, null, false];
   }
   await db.close();
   if (!row) {
@@ -62,13 +62,15 @@ const whoami = async function (userid, server, Discord) {
       null,
       `
 Hmmm I'm really not sure myself but I'd love to get to know you!
-Use \`!iam <affiliation> <name> <ucla_email>\` and verify your email address.`,
+Use \`/iam <affiliation> <name> <ucla_email>\` and verify your email address.`,
+      false
     ];
   }
-    
+
   return [
     null,
-    await createUserInfoMsg(row, 'About You', `Why, you're ${row.nickname} of course!`, server, Discord)
+    await createUserInfoMsg(row, 'About You', `Why, you're ${row.nickname} of course!`, server, Discord),
+    true
   ];
 };
 
@@ -81,7 +83,7 @@ const getUserByUsername = async function (username, discriminator, server, Disco
     filename: config.db_path,
     driver: sqlite3.Database,
   });
-    
+
   // check if user is verified
   let row = null;
   try {
@@ -98,15 +100,15 @@ const getUserByUsername = async function (username, discriminator, server, Disco
   } catch (e) {
     console.error(e.toString());
     await db.close();
-    return [{ message: e.toString() }, null];
+    return [{ message: e.toString() }, null, false];
   }
   await db.close();
-    
+
   if (!row) {
-    return [null, 'User not found/verified.'];
+    return [null, 'User not found/verified.', false];
   }
-    
-  return [null, await createUserInfoMsg(row, 'User Information', `Moderator Lookup on ${row.userid}`, server, Discord)];
+
+  return [null, await createUserInfoMsg(row, 'User Information', `Moderator Lookup on ${row.userid}`, server, Discord), true];
 };
 
 // get information on a user by discord username (note: users can change this)
@@ -117,7 +119,7 @@ const getUserById = async function (userid, server, Discord) {
     filename: config.db_path,
     driver: sqlite3.Database,
   });
-    
+
   // check is user is verified
   let row = null;
   try {
@@ -133,15 +135,15 @@ const getUserById = async function (userid, server, Discord) {
   } catch (e) {
     console.error(e.toString());
     await db.close();
-    return [{ message: e.toString() }, null];
+    return [{ message: e.toString() }, null, false];
   }
   await db.close();
-    
+
   if (!row) {
-    return [null, 'User not found/verified.'];
+    return [null, 'User not found/verified.', false];
   }
-    
-  return [null, await createUserInfoMsg(row, 'User Information', `Moderator Lookup on ${row.userid}`, server, Discord)];
+
+  return [null, await createUserInfoMsg(row, 'User Information', `Moderator Lookup on ${row.userid}`, server, Discord), true];
 };
 
 module.exports = {whoami, getUserByUsername, getUserById};
