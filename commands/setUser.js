@@ -39,7 +39,7 @@ const setPronouns = async function (userid, pronouns, server) {
       null,
       `
 Sorry, I don't think you're verified!.
-Use \`!iam <affiliation> <name> <ucla_email>\` to verify your email address.`,
+Use \`/iam <affiliation> <name> <ucla_email>\` to verify your email address.`,
     ];
   }
 
@@ -77,8 +77,8 @@ Use \`!iam <affiliation> <name> <ucla_email>\` to verify your email address.`,
     return [
       null,
       `Sorry, I don't have the permissions to add your pronouns (${pronouns}) to your name in the server.`
-    ]
-  };
+    ];
+  }
 };
 
 // add major in database record
@@ -118,7 +118,7 @@ const setMajor = async function (userid, major) {
       null,
       `
 Sorry, I don't think you're verified!.
-Use \`!iam <affiliation> <name> <ucla_email>\` and verify your email address.`,
+Use \`/iam <affiliation> <name> <ucla_email>\` and verify your email address.`,
     ];
   }
 
@@ -184,7 +184,7 @@ const setYear = async function (userid, year) {
       null,
       `
 Sorry, I don't think you're verified!.
-Use \`!iam <affiliation> <name> <ucla_email>\` and verify your email address.`,
+Use \`/iam <affiliation> <name> <ucla_email>\` and verify your email address.`,
     ];
   }
 
@@ -245,7 +245,7 @@ const toggleTransfer = async function (userid) {
       null,
       `
 Sorry, I don't think you're verified!.
-Use \`!iam <affiliation> <name> <ucla_email>\` and verify your email address.`,
+Use \`/iam <affiliation> <name> <ucla_email>\` and verify your email address.`,
     ];
   }
 

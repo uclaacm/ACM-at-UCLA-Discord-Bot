@@ -1,4 +1,4 @@
 test('test found', () => {
-    expect(true).toBe(true)
+  expect(true).toBe(true);
 });
 

@@ -53,9 +53,9 @@ const verify = async function (code, member, verified_role, mod_role, alumni_rol
 
   // add verified role to user
   try {
-    await member.roles.add(verified_role)
+    await member.roles.add(verified_role);
     if (row.affiliation === 'alumni') { // and if alumni, add alumni role
-      await member.roles.add(alumni_role)
+      await member.roles.add(alumni_role);
     }
   } catch(e) {
     console.log(e.toString());
