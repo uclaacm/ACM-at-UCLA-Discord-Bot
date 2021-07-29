@@ -394,23 +394,23 @@ client.ws.on('INTERACTION_CREATE', async interaction => {
   else if (command === 'stats' && isModOrAdmin(member)) {
     let option = args[0].value.toLowerCase();
     switch (option) {
-      case 'verified': // number of verified users
-        [err, message] = await command_getStats.getNumVerifiedStats();
-        break;
-      case 'major': // breakdown of majors by count
-        [err, message] = await command_getStats.getMajorStats();
-        break;
-      case 'year': // breakdown of graduation year by count
-        [err, message] = await command_getStats.getYearStats();
-        break;
-      case 'transfer': // number of transfer students
-        [err, message] = await command_getStats.getNumTransferStats();
-        break;
-      case 'affiliation': // breakdown of affiliation by count
-        [err, message] = await command_getStats.getAffiliationStats();
-        break;
-      default:
-        message = 'Please enter a valid stat type (verified|major|year|transfer|affiliation)';
+    case 'verified': // number of verified users
+      [err, message] = await command_getStats.getNumVerifiedStats();
+      break;
+    case 'major': // breakdown of majors by count
+      [err, message] = await command_getStats.getMajorStats();
+      break;
+    case 'year': // breakdown of graduation year by count
+      [err, message] = await command_getStats.getYearStats();
+      break;
+    case 'transfer': // number of transfer students
+      [err, message] = await command_getStats.getNumTransferStats();
+      break;
+    case 'affiliation': // breakdown of affiliation by count
+      [err, message] = await command_getStats.getAffiliationStats();
+      break;
+    default:
+      message = 'Please enter a valid stat type (verified|major|year|transfer|affiliation)';
     }
   }
   else if (command === 'help') {
