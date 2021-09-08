@@ -94,15 +94,3 @@ const iam = async function (userid, email, nickname, affiliation) {
 };
 
 module.exports = {iam};
-    await db.close();
-    return [{ message: e.toString() }, null];
-  }
-  await db.close();
-
-  return [
-    null,
-    `Please check your email \`${email}\` for a 6-digit verification code. Verify using \`/verify <code>\``,
-  ];
-};
-
-module.exports = {iam};
