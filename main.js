@@ -1,6 +1,5 @@
 require('dotenv').config();
 const Discord = require('discord.js');
-const sgMail = require('@sendgrid/mail');
 const sqlite = require('sqlite');
 const sqlite3 = require('sqlite3');
 const config = require('./config.' + process.env.NODE_ENV_MODE);
@@ -14,9 +13,6 @@ let alumni_role = null;
 const isModOrAdmin = member =>
   member.hasPermission('ADMINISTRATOR') ||
   member.roles.cache.has(mod_role.id);
-
-// sendgrid
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 // load commands
 const command_iam = require('./commands/iam');
@@ -326,7 +322,6 @@ client.ws.on('INTERACTION_CREATE', async interaction => {
       email,
       nickname,
       affiliation,
-      sgMail
     );
   }
   // TODO: fix verify (msg.author)
