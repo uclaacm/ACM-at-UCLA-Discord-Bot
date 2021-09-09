@@ -50,7 +50,7 @@ const setMsg = async function(type, msg) {
     SET message = ?
     WHERE
         message_id = ?`,
-      [msg, type]
+    [msg, type]
     );
   } catch (e) {
     console.error(e.toString());

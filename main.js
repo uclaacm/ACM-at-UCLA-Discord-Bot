@@ -111,18 +111,18 @@ client.on('ready', async () => {
           'name': 'affiliation',
           'description': 'UCLA affiliation',
           'type': 3,
-          "choices": [
+          'choices': [
             {
-              "name": "Student",
-              "value": "student"
+              'name': 'Student',
+              'value': 'student'
             },
             {
-              "name": "Alumni",
-              "value": "alumni"
+              'name': 'Alumni',
+              'value': 'alumni'
             },
             {
-              "name": "Other",
-              "value": "other"
+              'name': 'Other',
+              'value': 'other'
             }
           ],
           'required': true,
@@ -278,26 +278,26 @@ client.on('ready', async () => {
           'name': 'stat',
           'description': 'Select from available statistics',
           'type': 3,
-          "choices": [
+          'choices': [
             {
-              "name": "Verified Users",
-              "value": "verified"
+              'name': 'Verified Users',
+              'value': 'verified'
             },
             {
-              "name": "Major Breakdown",
-              "value": "major"
+              'name': 'Major Breakdown',
+              'value': 'major'
             },
             {
-              "name": "Graduation Year",
-              "value": "year"
+              'name': 'Graduation Year',
+              'value': 'year'
             },
             {
-              "name": "Transfer Students",
-              "value": "transfer"
+              'name': 'Transfer Students',
+              'value': 'transfer'
             },
             {
-              "name": "Affiliation",
-              "value": "affiliation"
+              'name': 'Affiliation',
+              'value': 'affiliation'
             }
           ],
           'required': true,

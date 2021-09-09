@@ -301,7 +301,7 @@ const updateUserNickname = async function(userid, nickname, server) {
   if (!row) {
     return [
       null,
-      `Invalid/unverified user.`,
+      'Invalid/unverified user.',
     ];
   }
 
