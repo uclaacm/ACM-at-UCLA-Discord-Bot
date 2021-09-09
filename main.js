@@ -109,8 +109,22 @@ client.on('ready', async () => {
       options: [
         {
           'name': 'affiliation',
-          'description': 'Your affiliation (e.g. `student`)',
+          'description': 'UCLA affiliation',
           'type': 3,
+          "choices": [
+            {
+              "name": "Student",
+              "value": "student"
+            },
+            {
+              "name": "Alumni",
+              "value": "alumni"
+            },
+            {
+              "name": "Other",
+              "value": "other"
+            }
+          ],
           'required': true,
         },
         {
@@ -159,6 +173,7 @@ client.on('ready', async () => {
     },
   });
 
+  // TODO: add majors as available choices for majors option
   await client.api.applications(client.user.id).guilds(config.discord.server_id).commands.post({
     data: {
       name: 'major',
@@ -261,8 +276,30 @@ client.on('ready', async () => {
       options: [
         {
           'name': 'stat',
-          'description': '`verified|major|year|transfer|affiliation`',
+          'description': 'Select from available statistics',
           'type': 3,
+          "choices": [
+            {
+              "name": "Verified Users",
+              "value": "verified"
+            },
+            {
+              "name": "Major Breakdown",
+              "value": "major"
+            },
+            {
+              "name": "Graduation Year",
+              "value": "year"
+            },
+            {
+              "name": "Transfer Students",
+              "value": "transfer"
+            },
+            {
+              "name": "Affiliation",
+              "value": "affiliation"
+            }
+          ],
           'required': true,
         }
       ]
