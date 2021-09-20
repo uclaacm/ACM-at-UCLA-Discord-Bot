@@ -53,10 +53,12 @@ const verify = async function(code, author, server, guest_role, verified_role, m
   }
 
   let domain = row.email.match(
-    '^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+.)?[a-zA-Z]+.)?.+\.edu$'
+    '^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+.)?[a-zA-Z]+.)?(' +
+    config.allowed_domains.join('|') +
+    ')$'
   );
 
-  if (row.affiliation === 'other' && !config.allowed_domains.includes(domain[1])) {
+  if (row.affiliation === 'other' && !(domain && config.allowed_domains.includes(domain[1]))) {
     await member.roles.add(guest_role);
   }
   else {
