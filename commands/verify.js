@@ -1,6 +1,6 @@
 const sqlite = require('sqlite');
 const sqlite3 = require('sqlite3');
-const config = require('../config.'+process.env.NODE_ENV_MODE);
+const config = require('../config.' + process.env.NODE_ENV_MODE);
 
 const isModOrAdmin = (member, mod_role) =>
   member.hasPermission('ADMINISTRATOR') ||
@@ -8,16 +8,16 @@ const isModOrAdmin = (member, mod_role) =>
 
 // verify code and and role to access server
 // linked to VERIFY command
-const verify = async function (code, author, server, verified_role, mod_role, alumni_role) {
+const verify = async function(code, author, server, guest_role, verified_role, mod_role, alumni_role) {
   // open db
   let db = await sqlite.open({
     filename: config.db_path,
     driver: sqlite3.Database,
   });
-    
+
   // get member from the ACM server
   let member = await server.members.fetch(author.id);
-    
+
   // get iam details from usercodes table
   let row = null;
   let row_user = null;
@@ -51,20 +51,29 @@ const verify = async function (code, author, server, verified_role, mod_role, al
     await db.close();
     return [null, 'Sorry, this code is either invalid/expired.'];
   }
-    
-  // add verified role to user
-  await member.roles.add(verified_role);
-  if (row.affiliation === 'alumni') { // and if alumni, add alumni role
-    await member.roles.add(alumni_role);
+
+  let domain = row.email.match(
+    '^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+.)?[a-zA-Z]+.)?.+\.edu$'
+  );
+
+  if (row.affiliation === 'other' && !config.allowed_domains.includes(domain[1])) {
+    await member.roles.add(guest_role);
   }
-    
+  else {
+    // add verified role to non-other ucla user
+    await member.roles.add(verified_role);
+    if (row.affiliation === 'alumni') { // and if alumni, add alumni role
+      await member.roles.add(alumni_role);
+    }
+  }
+
   // set nickname: <name> (<pronouns>)
-  member.setNickname(row.nickname + (row_user ? ` (${row_user.pronouns})`: ''));
-    
+  member.setNickname(row.nickname + (row_user ? ` (${row_user.pronouns})` : ''));
+
   try {
     // delete usercode entry
     await db.run('DELETE FROM usercodes WHERE userid = ?', [author.id]);
-    
+
     // check if email is already verified
     // it's possible for two users to request a code on the same email
     // until any of the users has actually used the code!
@@ -75,7 +84,7 @@ const verify = async function (code, author, server, verified_role, mod_role, al
       await db.close();
       return [null, 'This email has already been verified. If you own this email address, please contact any of the Moderators.'];
     }
-    
+
     // add to users db (stores verified users)
     await db.run(
       `
@@ -110,7 +119,7 @@ const verify = async function (code, author, server, verified_role, mod_role, al
     await db.close();
     return [{ message: e.toString() }, null];
   }
-    
+
   await db.close();
   return [
     null,
@@ -134,4 +143,4 @@ const verify = async function (code, author, server, verified_role, mod_role, al
   ];
 };
 
-module.exports = {verify};
+module.exports = { verify };

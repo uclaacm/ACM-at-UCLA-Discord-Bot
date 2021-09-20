@@ -3,17 +3,18 @@ const Discord = require('discord.js');
 const sgMail = require('@sendgrid/mail');
 const sqlite = require('sqlite');
 const sqlite3 = require('sqlite3');
-const config = require('./config.'+process.env.NODE_ENV_MODE);
+const config = require('./config.' + process.env.NODE_ENV_MODE);
 
 // discord
 const client = new Discord.Client();
 let server = null;
+let guest_role = null;
 let verified_role = null;
 let mod_role = null;
 let alumni_role = null;
 const isModOrAdmin = member =>
   member.hasPermission('ADMINISTRATOR') ||
-    member.roles.cache.has(mod_role.id);
+  member.roles.cache.has(mod_role.id);
 
 // sendgrid
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
@@ -46,6 +47,7 @@ client.on('ready', async () => {
 
   // find server and required roles
   server = await client.guilds.fetch(config.discord.server_id);
+  guest_role = server.roles.cache.find((role) => role.name === config.discord.guest_role_name);
   verified_role = server.roles.cache.find((role) => role.name === config.discord.verified_role_name);
   mod_role = server.roles.cache.find((role) => role.name === config.discord.mod_role_name);
   alumni_role = server.roles.cache.find((role) => role.name === config.discord.alumni_role_name);
@@ -112,7 +114,7 @@ client.on('guildMemberAdd', async (member) => {
   let welcome_msg = null;
   let row = null;
   try {
-    let {message} = await db.get('SELECT message FROM messages WHERE message_id = ?', 'welcome');
+    let { message } = await db.get('SELECT message FROM messages WHERE message_id = ?', 'welcome');
     welcome_msg = message;
     row = await db.get('SELECT * FROM users WHERE userid = ?', [member.id]);
   } catch (e) {
@@ -130,7 +132,7 @@ client.on('guildMemberAdd', async (member) => {
     if (row.affiliation === 'alumni') {
       await server_member.roles.add(alumni_role);
     }
-    server_member.setNickname(row.nickname + (row.pronouns ? ` (${row.pronouns})`: ''));
+    server_member.setNickname(row.nickname + (row.pronouns ? ` (${row.pronouns})` : ''));
 
     firstMsg = `
 Welcome back ${row.nickname} (${row.pronouns})!
@@ -155,7 +157,7 @@ Since you're a Moderator, you can also use the following commands:
 ` : '');
   }
 
-  else  {
+  else {
     firstMsg = welcome_msg;
   }
 
@@ -187,13 +189,13 @@ client.on('message', async (msg) => {
   if (command === 'iam') {
     if (args.length < 3) {
       msg.reply(
-        'Invalid command format. Format: `!iam <affiliation> <name> <ucla_email>` e.g. `!iam student Joe Bruin joe@g.ucla.edu`'
+        'Invalid command format. Format: `!iam <affiliation> <name> <edu_email>` e.g. `!iam student Joe Bruin joe@g.ucla.edu`. If you\'re a UCLA student, please make sure to set your affiliation to "student" and use your UCLA email address.'
       );
       return;
     }
     let affiliation = args[0].toLowerCase();
-    let nickname = args.slice(1, args.length-1).join(' ');
-    let email = args[args.length-1].toLowerCase();
+    let nickname = args.slice(1, args.length - 1).join(' ');
+    let email = args[args.length - 1].toLowerCase();
     [err, message] = await command_iam.iam(
       msg.author.id,
       email,
@@ -216,6 +218,7 @@ client.on('message', async (msg) => {
       code,
       msg.author,
       server,
+      guest_role,
       verified_role,
       mod_role,
       alumni_role
@@ -343,23 +346,23 @@ client.on('message', async (msg) => {
 
     let option = args[0].toLowerCase();
     switch (option) {
-    case 'verified': // number of verified users
-      [err, message] = await command_getStats.getNumVerifiedStats();
-      break;
-    case 'major': // breakdown of majors by count
-      [err, message] = await command_getStats.getMajorStats();
-      break;
-    case 'year': // breakdown of graduation year by count
-      [err, message] = await command_getStats.getYearStats();
-      break;
-    case 'transfer': // number of transfer students
-      [err, message] = await command_getStats.getNumTransferStats();
-      break;
-    case 'affiliation': // breakdown of affiliation by count
-      [err, message] = await command_getStats.getAffiliationStats();
-      break;
-    default:
-      message = 'Please enter a valid stat type (verified|major|year|transfer|affiliation)';
+      case 'verified': // number of verified users
+        [err, message] = await command_getStats.getNumVerifiedStats();
+        break;
+      case 'major': // breakdown of majors by count
+        [err, message] = await command_getStats.getMajorStats();
+        break;
+      case 'year': // breakdown of graduation year by count
+        [err, message] = await command_getStats.getYearStats();
+        break;
+      case 'transfer': // number of transfer students
+        [err, message] = await command_getStats.getNumTransferStats();
+        break;
+      case 'affiliation': // breakdown of affiliation by count
+        [err, message] = await command_getStats.getAffiliationStats();
+        break;
+      default:
+        message = 'Please enter a valid stat type (verified|major|year|transfer|affiliation)';
     }
   }
 

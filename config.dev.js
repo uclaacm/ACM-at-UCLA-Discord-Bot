@@ -10,6 +10,7 @@ module.exports = {
   discord: {
     server_id: '842102423345823765',
     gen_code_length: 6,
+    guest_role_name: 'Guest',
     verified_role_name: 'Verified',
     mod_role_name: 'Moderator',
     alumni_role_name: 'Alumni',
@@ -23,12 +24,12 @@ module.exports = {
     welcome: `
 Welcome to the official **ACM at UCLA** Discord community!
 
-To keep the server a safe place for everyone,  please verify yourself using your UCLA.edu email address. We recommend using **\`@g.ucla.edu\`** over **\`@ucla.edu\`** for faster verification. Also, please let us know your affiliation with UCLA (student/alumni/other).
+To keep the server a safe place for everyone,  please verify yourself using your university (.edu) email address. Also, please let us know your affiliation with UCLA (student/alumni/other). Use "other" if you're not a UCLA student. If you are a UCLA student, please make sure to use your UCLA email address. We recommend using **\`@g.ucla.edu\`** over **\`@ucla.edu\`** for faster verification.
 
 **By verifying, you agree to the rules and guidelines posted in #:information_source:server-info**
 To obtain your verification code, reply to this message with the following command:
 \`\`\`MD
-!iam <affiliation> <name> <ucla_email>
+!iam <affiliation> <name> <edu_email>
 \`\`\`
 `,
   },
