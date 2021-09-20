@@ -1,7 +1,7 @@
 module.exports = {
   cmd_prefix: '!',
   db_path: './userinfo.db',
-  allowed_domains: ['ucla.edu'],
+  allowed_domains: ['ucla'],
   affiliation_map: {
     student: 's',
     alumni: 'a',

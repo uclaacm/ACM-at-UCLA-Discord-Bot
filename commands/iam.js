@@ -20,12 +20,12 @@ const iam = async function(userid, email, nickname, affiliation, sgMail) {
     return [null, 'Please provide a valid affiliation (student/alumni/other).'];
   }
 
-  if (affil_key === 'o') {
-    let domain = email.match(
-      '^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+.)?[a-zA-Z]+.)?.+\.edu$'
-    );
+  let match_groups = email.match(
+    /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:([a-z0-9](?:[a-z0-9-]*[a-z0-9])?)\.)+([a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\]))/
+  );
 
-    if (!domain) {
+  if (affil_key === 'o') {
+    if (!match_groups || match_groups[2] !== 'edu') {
       return [null, 'Please enter a valid college/university email address (example@university.edu).'];
     }
   }
@@ -33,13 +33,7 @@ const iam = async function(userid, email, nickname, affiliation, sgMail) {
   else {
     // check email against allowed domains
     // for non-other roles
-    let domain = email.match(
-      '^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+.)?[a-zA-Z]+.)?(' +
-      config.allowed_domains.join('|') +
-      ')$'
-    );
-
-    if (!(domain && config.allowed_domains.includes(domain[1]))) {
+    if (!(match_groups && config.allowed_domains.includes(match_groups[1]))) {
       return [null, 'Please enter a valid UCLA email address (example@cs.ucla.edu).'];
     }
   }
