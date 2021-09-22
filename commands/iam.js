@@ -18,8 +18,8 @@ const iam = async function (userid, email, nickname, affiliation) {
   // check email against allowed domains
   let domain = email.match(
     '^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+.)?[a-zA-Z]+.)?(' +
-        config.allowed_domains.join('|') +
-        ')$'
+    config.allowed_domains.join('|') +
+    ')$'
   );
   if (!(domain && config.allowed_domains.includes(domain[1]))) {
     return [null, 'Please enter a valid UCLA email address (example@cs.ucla.edu).'];
@@ -46,7 +46,7 @@ const iam = async function (userid, email, nickname, affiliation) {
   // check if email is already verified
   let emailExists = null;
   try {
-    // TODO: treat .*.ucla.edu the same as ucla.edu for existence check
+    // FIXME: treat .*.ucla.edu the same as ucla.edu for existence check
     emailExists = await db.get('SELECT * FROM users WHERE email = ?', [email]);
   } catch (e) {
     console.error(e.toString());
@@ -89,8 +89,8 @@ const iam = async function (userid, email, nickname, affiliation) {
 
   return [
     null,
-    `Please check your email \`${email}\` for a 6-digit verification code. Verify using \`/verify <code>\``,
+    `Please check your email \`${email}\` for a 6-digit verification code. Verify using \`/verify\``,
   ];
 };
 
-module.exports = {iam};
+module.exports = { iam };

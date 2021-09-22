@@ -11,8 +11,7 @@ let verified_role = null;
 let mod_role = null;
 let alumni_role = null;
 const isModOrAdmin = member =>
-  member.hasPermission('ADMINISTRATOR') ||
-  member.roles.cache.has(mod_role.id);
+  member.hasPermission('ADMINISTRATOR') || member.roles.cache.has(mod_role.id);
 
 // load commands
 const command_iam = require('./commands/iam');
@@ -102,23 +101,37 @@ client.on('ready', async () => {
   await client.api.applications(client.user.id).guilds(config.discord.server_id).commands.post({
     data: {
       name: 'iam',
-      description: 'Save your information. Format: `/iam <affiliation> <name> <ucla_email>`',
+      description: 'Register with your details to access the server',
       options: [
         {
           'name': 'affiliation',
-          'description': 'Your affiliation (e.g. `student`)',
+          'description': 'UCLA affiliation',
           'type': 3,
+          'choices': [
+            {
+              'name': 'Student',
+              'value': 'student'
+            },
+            {
+              'name': 'Alumni',
+              'value': 'alumni'
+            },
+            {
+              'name': 'Other',
+              'value': 'other'
+            }
+          ],
           'required': true,
         },
         {
           'name': 'name',
-          'description': 'Your name (e.g. `Joe Bruin`)',
+          'description': 'Your preferred name (e.g. `Joe Bruin`)',
           'type': 3,
           'required': true,
         },
         {
           'name': 'email',
-          'description': 'Your UCLA email (e.g. `joe@g.ucla.edu`)',
+          'description': 'UCLA email address (e.g. `joe@g.ucla.edu`)',
           'type': 3,
           'required': true,
         }
@@ -129,11 +142,11 @@ client.on('ready', async () => {
   await client.api.applications(client.user.id).guilds(config.discord.server_id).commands.post({
     data: {
       name: 'pronouns',
-      description: 'Set your pronouns. Format: `/pronouns <preferred_pronouns>`',
+      description: 'Set your pronouns',
       options: [
         {
           'name': 'pronouns',
-          'description': 'Your pronouns (e.g. `he/him`)',
+          'description': 'Pronouns (e.g. `they/them`)',
           'type': 3,
           'required': true,
         }
@@ -144,11 +157,11 @@ client.on('ready', async () => {
   await client.api.applications(client.user.id).guilds(config.discord.server_id).commands.post({
     data: {
       name: 'verify',
-      description: 'Verify your account. Format: `/verify <code>`',
+      description: 'Use the emailed code to verify your account',
       options: [
         {
           'name': 'code',
-          'description': 'Your code sent to your UCLA email (e.g. `314159`)',
+          'description': 'Code sent to your UCLA email (e.g. `314159`)',
           'type': 4,
           'required': true,
         }
@@ -156,10 +169,11 @@ client.on('ready', async () => {
     },
   });
 
+  // TODO: add majors as available choices for majors option
   await client.api.applications(client.user.id).guilds(config.discord.server_id).commands.post({
     data: {
       name: 'major',
-      description: 'Set your major. Format: `/major <ucla_major>`',
+      description: 'Set your major',
       options: [
         {
           'name': 'major',
@@ -174,7 +188,7 @@ client.on('ready', async () => {
   await client.api.applications(client.user.id).guilds(config.discord.server_id).commands.post({
     data: {
       name: 'year',
-      description: 'Set your year. Format: `/year <graduation_year>`',
+      description: 'Set your expected graduation year',
       options: [
         {
           'name': 'year',
@@ -189,21 +203,21 @@ client.on('ready', async () => {
   await client.api.applications(client.user.id).guilds(config.discord.server_id).commands.post({
     data: {
       name: 'transfer',
-      description: 'Toggle the transfer option.',
+      description: 'Toggle whether you\'re a transfer student',
     },
   });
 
   await client.api.applications(client.user.id).guilds(config.discord.server_id).commands.post({
     data: {
       name: 'whoami',
-      description: 'View your information.',
+      description: 'View your registered information',
     },
   });
 
   await client.api.applications(client.user.id).guilds(config.discord.server_id).commands.post({
     data: {
       name: 'lookup',
-      description: 'Lookup a user by ID.',
+      description: 'Lookup a user',
       options: [
         {
           'name': 'user',
@@ -233,11 +247,11 @@ client.on('ready', async () => {
   await client.api.applications(client.user.id).guilds(config.discord.server_id).commands.post({
     data: {
       name: 'name',
-      description: 'Update nickname. Format: `/name <userid> <new_name>`',
+      description: 'Update user\'s nickname',
       options: [
         {
           'name': 'id',
-          'description': 'ID of user',
+          'description': 'User ID of user',
           'type': 6,
           'required': true,
         },
@@ -254,12 +268,34 @@ client.on('ready', async () => {
   await client.api.applications(client.user.id).guilds(config.discord.server_id).commands.post({
     data: {
       name: 'stats',
-      description: 'View various stats of verified users.',
+      description: 'View various stats of verified users',
       options: [
         {
           'name': 'stat',
-          'description': '`verified|major|year|transfer|affiliation`',
+          'description': 'Select from available statistics',
           'type': 3,
+          'choices': [
+            {
+              'name': 'Verified Users',
+              'value': 'verified'
+            },
+            {
+              'name': 'Major Breakdown',
+              'value': 'major'
+            },
+            {
+              'name': 'Graduation Year',
+              'value': 'year'
+            },
+            {
+              'name': 'Transfer Students',
+              'value': 'transfer'
+            },
+            {
+              'name': 'Affiliation',
+              'value': 'affiliation'
+            }
+          ],
           'required': true,
         }
       ]
@@ -269,7 +305,7 @@ client.on('ready', async () => {
   await client.api.applications(client.user.id).guilds(config.discord.server_id).commands.post({
     data: {
       name: 'help',
-      description: 'View the possible commands',
+      description: 'View the available commands',
     },
   });
 
@@ -295,7 +331,6 @@ client.on('ready', async () => {
   });
 });
 
-
 client.ws.on('INTERACTION_CREATE', async interaction => {
   const command = interaction.data.name.toLowerCase();
   const userId = interaction.member.user.id;
@@ -308,11 +343,13 @@ client.ws.on('INTERACTION_CREATE', async interaction => {
   let [err, message, embed] = [null, null, false];
 
   if (member.user.bot) {
-    message = 'Sorry, bots cannot invoke commands';
+    return;
   }
+
   else if (!allowed_channels.includes(channel.name)) {
     message = 'Slash commands are not allowed in this channel. Please try again in ' + (member.hasPermission('ADMINISTRATOR') ? 'moderators or ' : '') + 'bot-commands.';
   }
+
   else if (command === 'iam') {
     let affiliation = args[0].value.toLowerCase();
     let nickname = args[1].value;
@@ -324,6 +361,7 @@ client.ws.on('INTERACTION_CREATE', async interaction => {
       affiliation,
     );
   }
+
   // TODO: fix verify (msg.author)
   else if (command === 'verify') {
     let code = args[0].value;
@@ -335,43 +373,49 @@ client.ws.on('INTERACTION_CREATE', async interaction => {
       alumni_role
     );
   }
+
   else if (command === 'pronouns') {
     let pronouns = args[0].value;
     [err, message] = await command_setUser.setPronouns(userId, pronouns, server);
   }
+
   else if (command === 'major') {
     let major = args[0].value.toLowerCase();
     [err, message] = await command_setUser.setMajor(userId, major);
   }
+
   else if (command === 'year') {
     let year = args[0].value;
     [err, message] = await command_setUser.setYear(userId, year);
   }
+
   else if (command === 'transfer') {
     [err, message] = await command_setUser.toggleTransfer(userId);
   }
+
   else if (command === 'whoami') {
     [err, message, embed] = await command_getUser.whoami(userId, server, Discord);
   }
+
   else if (command === 'lookup' && isModOrAdmin(member)) {
     let userData = args[0].value;
     if (userData.match('.+#([0-9]){4}')) {
       let [username, discriminator] = userData.split('#');
       [err, message, embed] = await command_getUser.getUserByUsername(username, discriminator, server, Discord);
     }
-
     else {
       [err, message, embed] = await command_getUser.getUserById(userData, server, Discord);
     }
   }
+
   else if (command === 'get_message' && member.hasPermission('ADMINISTRATOR')) {
     let type = args[0].value;
     [err, message] = await command_msg.getMsg(type);
   }
+
   else if (command === 'set_message' && member.hasPermission('ADMINISTRATOR')) {
     let type = args[0].value;
     let msg = args[1].value;
-
     if (type === 'welcome') {
       [err, message] = await command_msg.setMsg(type, msg);
     }
@@ -380,7 +424,9 @@ client.ws.on('INTERACTION_CREATE', async interaction => {
     }
     [err, message] = await command_msg.getMsg(type);
   }
-  // NOTE: whenever nicknames are being set anywhere, bot can only set nicknames for people that have roles lower than bot (otherwise causes DiscordAPIError: Missing Permissions)
+
+  // NOTE: whenever nicknames are being set anywhere, bot can only set nicknames for people that have roles lower than bot
+  // (otherwise causes DiscordAPIError: Missing Permissions)
   else if (command === 'name' && isModOrAdmin(member)) {
     let userid = args[0].value;
     let nickname = args[1].value;
@@ -389,28 +435,28 @@ client.ws.on('INTERACTION_CREATE', async interaction => {
   else if (command === 'stats' && isModOrAdmin(member)) {
     let option = args[0].value.toLowerCase();
     switch (option) {
-    case 'verified': // number of verified users
-      [err, message] = await command_getStats.getNumVerifiedStats();
-      break;
-    case 'major': // breakdown of majors by count
-      [err, message] = await command_getStats.getMajorStats();
-      break;
-    case 'year': // breakdown of graduation year by count
-      [err, message] = await command_getStats.getYearStats();
-      break;
-    case 'transfer': // number of transfer students
-      [err, message] = await command_getStats.getNumTransferStats();
-      break;
-    case 'affiliation': // breakdown of affiliation by count
-      [err, message] = await command_getStats.getAffiliationStats();
-      break;
-    default:
-      message = 'Please enter a valid stat type (verified|major|year|transfer|affiliation)';
+      case 'verified': // number of verified users
+        [err, message] = await command_getStats.getNumVerifiedStats();
+        break;
+      case 'major': // breakdown of majors by count
+        [err, message] = await command_getStats.getMajorStats();
+        break;
+      case 'year': // breakdown of graduation year by count
+        [err, message] = await command_getStats.getYearStats();
+        break;
+      case 'transfer': // number of transfer students
+        [err, message] = await command_getStats.getNumTransferStats();
+        break;
+      case 'affiliation': // breakdown of affiliation by count
+        [err, message] = await command_getStats.getAffiliationStats();
+        break;
+      default:
+        message = 'Please enter a valid stat type (verified|major|year|transfer|affiliation)';
     }
   }
+
   else if (command === 'help') {
-    message = `
-Here's a list of available commands:
+    message = `Here's a list of available commands:
 \`\`\`
 /major <valid_major>    | Your major
 /transfer               | Transfer student
@@ -418,15 +464,13 @@ Here's a list of available commands:
 /pronouns <pronouns>    | Max 10 characters
 /whoami                 | View your information
 /help                   | Show all commands
-\`\`\`
-` + (isModOrAdmin(member) ? `
+\`\`\`` + (isModOrAdmin(member) ? `
 Since you're a Moderator, you can also use the following commands:
 \`\`\`
 /name <userid> <new_name>                          | change userids nickname
 /lookup <userid>                                   | lookup verified user
 /stats <verified|major|year|transfer|affiliation>  | Useful for analytics
-\`\`\`
-` : '');
+\`\`\`` : '');
   }
   else {
     [err, message] = [null, 'Invalid command/format. Type `/help` for a list of available commands.'];
@@ -490,8 +534,7 @@ client.on('guildMemberAdd', async (member) => {
     }
     server_member.setNickname(row.nickname + (row.pronouns ? ` (${row.pronouns})` : ''));
 
-    firstMsg = `
-Welcome back ${row.nickname} (${row.pronouns})!
+    firstMsg = `Welcome back ${row.nickname} (${row.pronouns})!
 You have been auto-verified with your email address ${row.email}. If you think this is a mistake or you would like your information removed, please contact a Moderator.
 
 Remember you have access to the following commands:

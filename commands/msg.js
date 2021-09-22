@@ -1,16 +1,16 @@
 const sqlite = require('sqlite');
 const sqlite3 = require('sqlite3');
-const config = require('../config.'+process.env.NODE_ENV_MODE);
+const config = require('../config.' + process.env.NODE_ENV_MODE);
 
 // set message of specific type
 // linked to SET_MESSAGE command
-const getMsg = async function (type) {
+const getMsg = async function(type) {
   // open db
   let db = await sqlite.open({
     filename: config.db_path,
     driver: sqlite3.Database,
   });
-    
+
   // get message of specific type
   let row = null;
   try {
@@ -27,7 +27,7 @@ const getMsg = async function (type) {
       `Message type: ${type} not found`
     ];
   }
-    
+
   return [
     null,
     row.message
@@ -36,13 +36,13 @@ const getMsg = async function (type) {
 
 // get message content of specific type
 // linked to GET_MESSAGE command
-const setMsg = async function (type, msg) {
+const setMsg = async function(type, msg) {
   // open db
   let db = await sqlite.open({
     filename: config.db_path,
     driver: sqlite3.Database,
   });
-    
+
   // update message of specific type
   try {
     await db.run(`
@@ -57,7 +57,7 @@ const setMsg = async function (type, msg) {
     await db.close();
     return [{ message: e.toString() }, null];
   }
-    
+
   await db.close();
   return [
     null,
@@ -65,4 +65,4 @@ const setMsg = async function (type, msg) {
   ];
 };
 
-module.exports = {getMsg, setMsg};
+module.exports = { getMsg, setMsg };

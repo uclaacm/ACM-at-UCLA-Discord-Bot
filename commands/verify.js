@@ -1,14 +1,13 @@
 const sqlite = require('sqlite');
 const sqlite3 = require('sqlite3');
-const config = require('../config.'+process.env.NODE_ENV_MODE);
+const config = require('../config.' + process.env.NODE_ENV_MODE);
 
 const isModOrAdmin = (member, mod_role) =>
-  member.hasPermission('ADMINISTRATOR') ||
-  member.roles.cache.has(mod_role.id);
+  member.hasPermission('ADMINISTRATOR') || member.roles.cache.has(mod_role.id);
 
 // verify code and and role to access server
 // linked to VERIFY command
-const verify = async function (code, member, verified_role, mod_role, alumni_role) {
+const verify = async function(code, member, verified_role, mod_role, alumni_role) {
   // open db
   let db = await sqlite.open({
     filename: config.db_path,
@@ -57,14 +56,14 @@ const verify = async function (code, member, verified_role, mod_role, alumni_rol
     if (row.affiliation === 'alumni') { // and if alumni, add alumni role
       await member.roles.add(alumni_role);
     }
-  } catch(e) {
+  } catch (e) {
     console.log(e.toString());
   }
 
   // set nickname: <name> (<pronouns>)
   try {
-    await member.setNickname(row.nickname + (row_user ? ` (${row_user.pronouns})`: ''));
-  } catch(e) {
+    await member.setNickname(row.nickname + (row_user ? ` (${row_user.pronouns})` : ''));
+  } catch (e) {
     console.log(e.toString());
   }
 
@@ -129,8 +128,7 @@ const verify = async function (code, member, verified_role, mod_role, alumni_rol
     /pronouns <pronouns>    | Max 10 characters
     /whoami                 | View your information
     /help                   | Show all commands
-    \`\`\`
-    ` + (isModOrAdmin(member, mod_role) ? `
+    \`\`\`` + (isModOrAdmin(member, mod_role) ? `
     Since you're a Moderator, you can also use the following commands:
     \`\`\`
     /name <userid> <new_name>                          | change userids nickname
@@ -141,4 +139,4 @@ const verify = async function (code, member, verified_role, mod_role, alumni_rol
   ];
 };
 
-module.exports = {verify};
+module.exports = { verify };
