@@ -18,8 +18,8 @@
     "url": "https://github.com/entrohpy/discord-email-verifier-bot.git"
   },
   "dependencies": {
-    "@sendgrid/mail": "^7.2.5",
     "ascii-table": "0.0.9",
+    "aws-sdk": "^2.985.0",
     "discord.js": "^12.5.3",
     "dotenv": "^9.0.2",
     "sqlite": "^4.0.21",
