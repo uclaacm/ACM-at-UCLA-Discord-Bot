@@ -15,7 +15,6 @@ module.exports = {
     alumni_role_name: 'Alumni',
   },
   ses: {
-    accessKeyId: 'AKIAXVNZNEV35GSJXVWT',
     region: 'us-west-1',
     sender: 'acm@ucla.edu',
   },

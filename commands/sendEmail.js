@@ -2,8 +2,8 @@ const AWS = require('aws-sdk');
 const config = require('../config.' + process.env.NODE_ENV_MODE);
 
 const SES_CONFIG = {
-  accessKeyId: config.ses.accessKeyId,
-  secretAccessKey: process.env.AMAZON_SES_API_KEY,
+  accessKeyId: process.env.AMAZON_SES_ACCESS_KEY,
+  secretAccessKey: process.env.AMAZON_SES_SECRET_ACCESS_KEY,
   region: config.ses.region,
 };
 
