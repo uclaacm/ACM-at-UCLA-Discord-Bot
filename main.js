@@ -5,13 +5,18 @@ const sqlite3 = require('sqlite3');
 const config = require('./config.' + process.env.NODE_ENV_MODE);
 
 // discord
-const client = new Discord.Client();
+const client = new Discord.Client({
+  intents: [
+    Discord.Intents.FLAGS.GUILDS,
+    Discord.Intents.FLAGS.GUILD_MEMBERS
+  ]
+});
 let server = null;
 let verified_role = null;
 let mod_role = null;
 let alumni_role = null;
 const isModOrAdmin = member =>
-  member.hasPermission('ADMINISTRATOR') || member.roles.cache.has(mod_role.id);
+  member.hasPermissions('ADMINISTRATOR') || member.roles.cache.has(mod_role.id);
 
 // load commands
 const command_iam = require('./commands/iam');
@@ -93,252 +98,224 @@ client.on('ready', async () => {
 
   await db.close();
 
-  const commands = await client.api.applications(client.user.id).guilds(config.discord.server_id).commands.get();
-  const globalCommands = await client.api.applications(client.user.id).commands.get();
-  console.log(globalCommands);
-  console.log(commands);
 
-  await client.api.applications(client.user.id).guilds(config.discord.server_id).commands.post({
-    data: {
-      name: 'iam',
-      description: 'Register with your details to access the server',
-      options: [
-        {
-          'name': 'affiliation',
-          'description': 'UCLA affiliation',
-          'type': 3,
-          'choices': [
-            {
-              'name': 'Student',
-              'value': 'student'
-            },
-            {
-              'name': 'Alumni',
-              'value': 'alumni'
-            },
-            {
-              'name': 'Other',
-              'value': 'other'
-            }
-          ],
-          'required': true,
-        },
-        {
-          'name': 'name',
-          'description': 'Your preferred name (e.g. `Joe Bruin`)',
-          'type': 3,
-          'required': true,
-        },
-        {
-          'name': 'email',
-          'description': 'UCLA email address (e.g. `joe@g.ucla.edu`)',
-          'type': 3,
-          'required': true,
-        }
-      ]
-    },
+  await server.commands.create({
+    name: 'iam',
+    description: 'Register with your details to access the server',
+    options: [
+      {
+        'name': 'affiliation',
+        'description': 'UCLA affiliation',
+        'type': 3,
+        'choices': [
+          {
+            'name': 'Student',
+            'value': 'student'
+          },
+          {
+            'name': 'Alumni',
+            'value': 'alumni'
+          },
+          {
+            'name': 'Other',
+            'value': 'other'
+          }
+        ],
+        'required': true,
+      },
+      {
+        'name': 'name',
+        'description': 'Your preferred name (e.g. `Joe Bruin`)',
+        'type': 3,
+        'required': true,
+      },
+      {
+        'name': 'email',
+        'description': 'UCLA email address (e.g. `joe@g.ucla.edu`)',
+        'type': 3,
+        'required': true,
+      }
+    ],
   });
 
-  await client.api.applications(client.user.id).guilds(config.discord.server_id).commands.post({
-    data: {
-      name: 'pronouns',
-      description: 'Set your pronouns',
-      options: [
-        {
-          'name': 'pronouns',
-          'description': 'Pronouns (e.g. `they/them`)',
-          'type': 3,
-          'required': true,
-        }
-      ]
-    },
+  await server.commands.create({
+    name: 'pronouns',
+    description: 'Set your pronouns',
+    options: [
+      {
+        'name': 'pronouns',
+        'description': 'Pronouns (e.g. `they/them`)',
+        'type': 3,
+        'required': true,
+      }
+    ]
   });
 
-  await client.api.applications(client.user.id).guilds(config.discord.server_id).commands.post({
-    data: {
-      name: 'verify',
-      description: 'Use the emailed code to verify your account',
-      options: [
-        {
-          'name': 'code',
-          'description': 'Code sent to your UCLA email (e.g. `314159`)',
-          'type': 4,
-          'required': true,
-        }
-      ]
-    },
+  await server.commands.create({
+    name: 'verify',
+    description: 'Use the emailed code to verify your account',
+    options: [
+      {
+        'name': 'code',
+        'description': 'Code sent to your UCLA email (e.g. `314159`)',
+        'type': 4,
+        'required': true,
+      }
+    ],
   });
 
   // TODO: add majors as available choices for majors option
-  await client.api.applications(client.user.id).guilds(config.discord.server_id).commands.post({
-    data: {
-      name: 'major',
-      description: 'Set your major',
-      options: [
-        {
-          'name': 'major',
-          'description': 'Your major (e.g. `Computer Science`)',
-          'type': 3,
-          'required': true,
-        }
-      ]
-    },
+  await server.commands.create({
+    name: 'major',
+    description: 'Set your major',
+    options: [
+      {
+        'name': 'major',
+        'description': 'Your major (e.g. `Computer Science`)',
+        'type': 3,
+        'required': true,
+      }
+    ]
   });
 
-  await client.api.applications(client.user.id).guilds(config.discord.server_id).commands.post({
-    data: {
-      name: 'year',
-      description: 'Set your expected graduation year',
-      options: [
-        {
-          'name': 'year',
-          'description': 'Your year (e.g. `2024`)',
-          'type': 3,
-          'required': true,
-        }
-      ]
-    },
+  await server.commands.create({
+    name: 'year',
+    description: 'Set your expected graduation year',
+    options: [
+      {
+        'name': 'year',
+        'description': 'Your year (e.g. `2024`)',
+        'type': 3,
+        'required': true,
+      }
+    ]
   });
 
-  await client.api.applications(client.user.id).guilds(config.discord.server_id).commands.post({
-    data: {
-      name: 'transfer',
-      description: 'Toggle whether you\'re a transfer student',
-    },
+  await server.commands.create({
+    name: 'transfer',
+    description: 'Toggle whether you\'re a transfer student',
   });
 
-  await client.api.applications(client.user.id).guilds(config.discord.server_id).commands.post({
-    data: {
-      name: 'whoami',
-      description: 'View your registered information',
-    },
+  await server.commands.create({
+    name: 'whoami',
+    description: 'View your registered information',
   });
 
-  await client.api.applications(client.user.id).guilds(config.discord.server_id).commands.post({
-    data: {
-      name: 'lookup',
-      description: 'Lookup a user',
-      options: [
-        {
-          'name': 'user',
-          'description': '`<username>#<discriminator> | <userid>`',
-          'type': 3,
-          'required': true,
-        }
-      ]
-    },
+  let commandCreateRes = await server.commands.create({
+    name: 'lookup',
+    description: 'Lookup a user',
+    options: [
+      {
+        'name': 'user',
+        'description': '`<username>#<discriminator> | <userid>`',
+        'type': 3,
+        'required': true,
+      }
+    ],
   });
 
-  await client.api.applications(client.user.id).guilds(config.discord.server_id).commands.post({
-    data: {
-      name: 'get_message',
-      description: 'Get bot messages of specific type',
-      options: [
-        {
-          'name': 'type',
-          'description': 'Type of message you are looking for',
-          'type': 3,
-          'required': true,
-        }
-      ]
-    },
+  commandCreateRes = await server.commands.create({
+    name: 'get_message',
+    description: 'Get bot messages of specific type',
+    options: [
+      {
+        'name': 'type',
+        'description': 'Type of message you are looking for',
+        'type': 3,
+        'required': true,
+      }
+    ],
   });
 
-  await client.api.applications(client.user.id).guilds(config.discord.server_id).commands.post({
-    data: {
-      name: 'name',
-      description: 'Update user\'s nickname',
-      options: [
-        {
-          'name': 'id',
-          'description': 'User ID of user',
-          'type': 6,
-          'required': true,
-        },
-        {
-          'name': 'nickname',
-          'description': 'New nickname',
-          'type': 3,
-          'required': true,
-        }
-      ]
-    },
+  commandCreateRes = await server.commands.create({
+    name: 'name',
+    description: 'Update user\'s nickname',
+    options: [
+      {
+        'name': 'id',
+        'description': 'User ID of user',
+        'type': 6,
+        'required': true,
+      },
+      {
+        'name': 'nickname',
+        'description': 'New nickname',
+        'type': 3,
+        'required': true,
+      }
+    ],
   });
 
-  await client.api.applications(client.user.id).guilds(config.discord.server_id).commands.post({
-    data: {
-      name: 'stats',
-      description: 'View various stats of verified users',
-      options: [
-        {
-          'name': 'stat',
-          'description': 'Select from available statistics',
-          'type': 3,
-          'choices': [
-            {
-              'name': 'Verified Users',
-              'value': 'verified'
-            },
-            {
-              'name': 'Major Breakdown',
-              'value': 'major'
-            },
-            {
-              'name': 'Graduation Year',
-              'value': 'year'
-            },
-            {
-              'name': 'Transfer Students',
-              'value': 'transfer'
-            },
-            {
-              'name': 'Affiliation',
-              'value': 'affiliation'
-            }
-          ],
-          'required': true,
-        }
-      ]
-    },
+  commandCreateRes = await server.commands.create({
+    name: 'stats',
+    description: 'View various stats of verified users',
+    options: [
+      {
+        'name': 'stat',
+        'description': 'Select from available statistics',
+        'type': 3,
+        'choices': [
+          {
+            'name': 'Verified Users',
+            'value': 'verified'
+          },
+          {
+            'name': 'Major Breakdown',
+            'value': 'major'
+          },
+          {
+            'name': 'Graduation Year',
+            'value': 'year'
+          },
+          {
+            'name': 'Transfer Students',
+            'value': 'transfer'
+          },
+          {
+            'name': 'Affiliation',
+            'value': 'affiliation'
+          }
+        ],
+        'required': true,
+      }
+    ],
   });
 
-  await client.api.applications(client.user.id).guilds(config.discord.server_id).commands.post({
-    data: {
-      name: 'help',
-      description: 'View the available commands',
-    },
+  await server.commands.create({
+    name: 'help',
+    description: 'View the available commands',
   });
 
-  await client.api.applications(client.user.id).guilds(config.discord.server_id).commands.post({
-    data: {
-      name: 'set_message',
-      description: 'Set bot messages of specific type',
-      options: [
-        {
-          'name': 'type',
-          'description': 'Type of message you are setting',
-          'type': 3,
-          'required': true,
-        },
-        {
-          'name': 'message',
-          'description': 'Content of new message',
-          'type': 3,
-          'required': true,
-        }
-      ]
-    },
+  commandCreateRes = await server.commands.create({
+    name: 'set_message',
+    description: 'Set bot messages of specific type',
+    options: [
+      {
+        'name': 'type',
+        'description': 'Type of message you are setting',
+        'type': 3,
+        'required': true,
+      },
+      {
+        'name': 'message',
+        'description': 'Content of new message',
+        'type': 3,
+        'required': true,
+      }
+    ],
+  });
+
   });
 });
 
-client.ws.on('INTERACTION_CREATE', async interaction => {
-  const command = interaction.data.name.toLowerCase();
+client.on('interactionCreate', async interaction => {
+  const command = interaction.commandName.toLowerCase();
   const userId = interaction.member.user.id;
-  const args = interaction.data.options;
+  const args = interaction.options;
   let member = await server.members.fetch(userId);
-  let channel = await server.channels.cache.get(interaction.channel_id);
+  let channel = await server.channels.cache.get(interaction.channelId);
 
-  const allowed_channels = ['🚓moderators', '🤖bot-commands'];
+  const allowed_channels = ['🚓moderators', '🤖bot-commands', '👋welcome'];
 
   let [err, message, embed] = [null, null, false];
 
@@ -347,13 +324,13 @@ client.ws.on('INTERACTION_CREATE', async interaction => {
   }
 
   else if (!allowed_channels.includes(channel.name)) {
-    message = 'Slash commands are not allowed in this channel. Please try again in ' + (member.hasPermission('ADMINISTRATOR') ? 'moderators or ' : '') + 'bot-commands.';
+    message = 'Slash commands are not allowed in this channel. Please try again in ' + (isModOrAdmin(member) ? 'moderators, ' : '') + 'welcome or bot-commands.';
   }
 
   else if (command === 'iam') {
-    let affiliation = args[0].value.toLowerCase();
-    let nickname = args[1].value;
-    let email = args[2].value.toLowerCase();
+    let affiliation = args.get('affiliation').value.toLowerCase();
+    let nickname = args.get('name').value;
+    let email = args.get('email').value.toLowerCase();
     [err, message] = await command_iam.iam(
       userId,
       email,
@@ -364,7 +341,7 @@ client.ws.on('INTERACTION_CREATE', async interaction => {
 
   // TODO: fix verify (msg.author)
   else if (command === 'verify') {
-    let code = args[0].value;
+    let code = args.get('code').value;
     [err, message] = await command_verify.verify(
       code,
       member,
@@ -375,17 +352,17 @@ client.ws.on('INTERACTION_CREATE', async interaction => {
   }
 
   else if (command === 'pronouns') {
-    let pronouns = args[0].value;
+    let pronouns = args.get('pronouns').value;
     [err, message] = await command_setUser.setPronouns(userId, pronouns, server);
   }
 
   else if (command === 'major') {
-    let major = args[0].value.toLowerCase();
+    let major = args.get('major').value.toLowerCase();
     [err, message] = await command_setUser.setMajor(userId, major);
   }
 
   else if (command === 'year') {
-    let year = args[0].value;
+    let year = args.get('year').value;
     [err, message] = await command_setUser.setYear(userId, year);
   }
 
@@ -397,8 +374,8 @@ client.ws.on('INTERACTION_CREATE', async interaction => {
     [err, message, embed] = await command_getUser.whoami(userId, server, Discord);
   }
 
-  else if (command === 'lookup' && isModOrAdmin(member)) {
-    let userData = args[0].value;
+  else if (command === 'lookup') {
+    let userData = args.get('user').value;
     if (userData.match('.+#([0-9]){4}')) {
       let [username, discriminator] = userData.split('#');
       [err, message, embed] = await command_getUser.getUserByUsername(username, discriminator, server, Discord);
@@ -408,14 +385,14 @@ client.ws.on('INTERACTION_CREATE', async interaction => {
     }
   }
 
-  else if (command === 'get_message' && member.hasPermission('ADMINISTRATOR')) {
-    let type = args[0].value;
+  else if (command === 'get_message') {
+    let type = args.get('type').value;
     [err, message] = await command_msg.getMsg(type);
   }
 
-  else if (command === 'set_message' && member.hasPermission('ADMINISTRATOR')) {
-    let type = args[0].value;
-    let msg = args[1].value;
+  else if (command === 'set_message') {
+    let type = args.get('type').value;
+    let msg = args.get('message').value;
     if (type === 'welcome') {
       [err, message] = await command_msg.setMsg(type, msg);
     }
@@ -427,13 +404,13 @@ client.ws.on('INTERACTION_CREATE', async interaction => {
 
   // NOTE: whenever nicknames are being set anywhere, bot can only set nicknames for people that have roles lower than bot
   // (otherwise causes DiscordAPIError: Missing Permissions)
-  else if (command === 'name' && isModOrAdmin(member)) {
-    let userid = args[0].value;
-    let nickname = args[1].value;
+  else if (command === 'name') {
+    let userid = args.get('id').value;
+    let nickname = args.get('nickname').value;
     [err, message] = await command_setUser.updateUserNickname(userid, nickname, server);
   }
-  else if (command === 'stats' && isModOrAdmin(member)) {
-    let option = args[0].value.toLowerCase();
+  else if (command === 'stats') {
+    let option = args.get('stat').value.toLowerCase();
     switch (option) {
       case 'verified': // number of verified users
         [err, message] = await command_getStats.getNumVerifiedStats();
@@ -477,28 +454,13 @@ Since you're a Moderator, you can also use the following commands:
   }
 
   if (embed) {
-    client.api.interactions(interaction.id, interaction.token).callback.post({
-      data: {
-        type: 4,
-        data: {
-          flags: 64,
-          embeds: [
-            message
-          ]
-        }
-      }
-    });
+    await interaction.reply({ embeds: [message], ephemeral: true });
+  }
+  else if (err) {
+    await interaction.reply({ content: 'Something went wrong!\n`' + err.message + '`', ephemeral: true });
   }
   else {
-    client.api.interactions(interaction.id, interaction.token).callback.post({
-      data: {
-        type: 4,
-        data: {
-          flags: 64,
-          content: err ? ('Something went wrong!\n`' + err.message + '`') : message,
-        }
-      }
-    });
+    await interaction.reply({ content: message, ephemeral: true });
   }
 });
 
@@ -535,25 +497,7 @@ client.on('guildMemberAdd', async (member) => {
     server_member.setNickname(row.nickname + (row.pronouns ? ` (${row.pronouns})` : ''));
 
     firstMsg = `Welcome back ${row.nickname} (${row.pronouns})!
-You have been auto-verified with your email address ${row.email}. If you think this is a mistake or you would like your information removed, please contact a Moderator.
-
-Remember you have access to the following commands:
-\`\`\`
-/major <valid_major>    | Your major
-/transfer               | Transfer student
-/year <grad_year>       | Your grad year
-/pronouns <pronouns>    | Max 10 characters
-/whoami                 | View your information
-/help                   | Show all commands
-\`\`\`
-` + (isModOrAdmin(member) ? `
-Since you're a Moderator, you can also use the following commands:
-\`\`\`
-/name <userid> <new_name>                          | change userids nickname
-/lookup <userid>                                   | lookup verified user
-/stats <verified|major|year|transfer|affiliation>  | Useful for analytics
-\`\`\`
-` : '');
+You have been auto-verified with your email address ${row.email}. If you think this is a mistake or you would like your information removed, please contact a Moderator.`;
   }
 
   else {
