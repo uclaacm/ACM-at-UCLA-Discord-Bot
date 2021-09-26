@@ -98,6 +98,10 @@ client.on('ready', async () => {
 
   await db.close();
 
+  // array of command ids of moderator-only commands
+  // these commands will be disabled by default using `defaultPermission`
+  // ids array used later to enable commands for users with mod role
+  let modCommandIds = [];
 
   await server.commands.create({
     name: 'iam',
@@ -212,7 +216,9 @@ client.on('ready', async () => {
         'required': true,
       }
     ],
+    defaultPermission: false,
   });
+  modCommandIds.push(commandCreateRes.id);
 
   commandCreateRes = await server.commands.create({
     name: 'get_message',
@@ -225,7 +231,9 @@ client.on('ready', async () => {
         'required': true,
       }
     ],
+    defaultPermission: false,
   });
+  modCommandIds.push(commandCreateRes.id);
 
   commandCreateRes = await server.commands.create({
     name: 'name',
@@ -244,7 +252,9 @@ client.on('ready', async () => {
         'required': true,
       }
     ],
+    defaultPermission: false,
   });
+  modCommandIds.push(commandCreateRes.id);
 
   commandCreateRes = await server.commands.create({
     name: 'stats',
@@ -279,7 +289,9 @@ client.on('ready', async () => {
         'required': true,
       }
     ],
+    defaultPermission: false,
   });
+  modCommandIds.push(commandCreateRes.id);
 
   await server.commands.create({
     name: 'help',
@@ -303,9 +315,23 @@ client.on('ready', async () => {
         'required': true,
       }
     ],
+    defaultPermission: false,
   });
+  modCommandIds.push(commandCreateRes.id);
 
+  // enable mod commands for users with mod role
+  const fullPermissions = [];
+  modCommandIds.forEach((id) => {
+    fullPermissions.push({
+      id: id,
+      permissions: [{
+        id: mod_role.id,
+        type: 'ROLE',
+        permission: true,
+      }],
+    });
   });
+  server.commands.permissions.set({ fullPermissions });
 });
 
 client.on('interactionCreate', async interaction => {
