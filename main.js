@@ -342,7 +342,7 @@ client.on('interactionCreate', async interaction => {
   let member = await server.members.fetch(userId);
   let channel = await server.channels.cache.get(interaction.channelId);
 
-  const allowed_channels = ['🚓moderators', '🤖bot-commands', '👋welcome'];
+  const allowed_channels = ['🚓moderators', '❓server-help'];
 
   let [err, message, embed] = [null, null, false];
 
@@ -351,7 +351,7 @@ client.on('interactionCreate', async interaction => {
   }
 
   else if (!allowed_channels.includes(channel.name)) {
-    message = 'Slash commands are not allowed in this channel. Please try again in ' + (isModOrAdmin(member) ? 'moderators, ' : '') + 'welcome or bot-commands.';
+    message = 'Slash commands are not allowed in this channel. Please try again in ' + (isModOrAdmin(member) ? '#moderators or ' : '') + 'or #server-help';
   }
 
   else if (command === 'iam') {
