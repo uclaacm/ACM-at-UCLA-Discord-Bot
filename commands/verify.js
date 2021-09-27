@@ -2,8 +2,9 @@ const sqlite = require('sqlite');
 const sqlite3 = require('sqlite3');
 const config = require('../config.' + process.env.NODE_ENV_MODE);
 
-const isModOrAdmin = (member, mod_role) =>
-  member.hasPermission('ADMINISTRATOR') || member.roles.cache.has(mod_role.id);
+const isModOrAdmin = member =>
+  member.permissions.has(Discord.Permissions.FLAGS.ADMINISTRATOR) ||
+  member.roles.cache.has(mod_role.id);
 
 // verify code and and role to access server
 // linked to VERIFY command
