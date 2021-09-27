@@ -14,10 +14,9 @@ module.exports = {
     mod_role_name: 'Moderator',
     alumni_role_name: 'Alumni',
   },
-  sendgrid: {
-    template_id: 'd-94f6493745b043d5ac07a59379a2d382',
-    group_id: 15831,
-    sender: 'rnema@ucla.edu',
+  ses: {
+    region: 'us-west-1',
+    sender: 'smahadev369@g.ucla.edu',
   },
   default_msgs: {
     welcome: `
@@ -28,7 +27,7 @@ To keep the server a safe place for everyone,  please verify yourself using your
 **By verifying, you agree to the rules and guidelines posted in #:information_source:server-info**
 To obtain your verification code, reply to this message with the following command:
 \`\`\`MD
-!iam <affiliation> <name> <ucla_email>
+/iam <affiliation> <name> <ucla_email>
 \`\`\`
 `,
   },

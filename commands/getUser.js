@@ -1,6 +1,6 @@
 const sqlite = require('sqlite');
 const sqlite3 = require('sqlite3');
-const config = require('../config.'+process.env.NODE_ENV_MODE);
+const config = require('../config.' + process.env.NODE_ENV_MODE);
 
 // create user info message using Discord Message Embed for better formatting
 async function createUserInfoMsg(row, title, description, server, Discord) {
@@ -32,13 +32,13 @@ async function createUserInfoMsg(row, title, description, server, Discord) {
 
 // who are you???
 // linked to WHOAMI command
-const whoami = async function (userid, server, Discord) {
+const whoami = async function(userid, server, Discord) {
   // open db
   let db = await sqlite.open({
     filename: config.db_path,
     driver: sqlite3.Database,
   });
-    
+
   // check if user is verified
   let row = null;
   try {
@@ -54,34 +54,35 @@ const whoami = async function (userid, server, Discord) {
   } catch (e) {
     console.error(e.toString());
     await db.close();
-    return [{ message: e.toString() }, null];
+    return [{ message: e.toString() }, null, false];
   }
   await db.close();
   if (!row) {
     return [
       null,
-      `
-Hmmm I'm really not sure myself but I'd love to get to know you!
-Use \`!iam <affiliation> <name> <ucla_email>\` and verify your email address.`,
+      `Hmmm I'm really not sure myself but I'd love to get to know you!
+Use \`/iam\` to verify your email address.`,
+      false
     ];
   }
-    
+
   return [
     null,
-    await createUserInfoMsg(row, 'About You', `Why, you're ${row.nickname} of course!`, server, Discord)
+    await createUserInfoMsg(row, 'About You', `Why, you're ${row.nickname} of course!`, server, Discord),
+    true
   ];
 };
 
 // get information on a user by discord username (note: users can change this)
 // only `userid` is invariant. Use getUserById
 // linked to LOOKUP command
-const getUserByUsername = async function (username, discriminator, server, Discord) {
+const getUserByUsername = async function(username, discriminator, server, Discord) {
   // open db
   let db = await sqlite.open({
     filename: config.db_path,
     driver: sqlite3.Database,
   });
-    
+
   // check if user is verified
   let row = null;
   try {
@@ -98,26 +99,26 @@ const getUserByUsername = async function (username, discriminator, server, Disco
   } catch (e) {
     console.error(e.toString());
     await db.close();
-    return [{ message: e.toString() }, null];
+    return [{ message: e.toString() }, null, false];
   }
   await db.close();
-    
+
   if (!row) {
-    return [null, 'User not found/verified.'];
+    return [null, 'User not found/verified.', false];
   }
-    
-  return [null, await createUserInfoMsg(row, 'User Information', `Moderator Lookup on ${row.userid}`, server, Discord)];
+
+  return [null, await createUserInfoMsg(row, 'User Information', `Moderator Lookup on ${row.userid}`, server, Discord), true];
 };
 
 // get information on a user by discord username (note: users can change this)
 // linked to LOOKUP command
-const getUserById = async function (userid, server, Discord) {
+const getUserById = async function(userid, server, Discord) {
   // open db
   let db = await sqlite.open({
     filename: config.db_path,
     driver: sqlite3.Database,
   });
-    
+
   // check is user is verified
   let row = null;
   try {
@@ -133,15 +134,15 @@ const getUserById = async function (userid, server, Discord) {
   } catch (e) {
     console.error(e.toString());
     await db.close();
-    return [{ message: e.toString() }, null];
+    return [{ message: e.toString() }, null, false];
   }
   await db.close();
-    
+
   if (!row) {
-    return [null, 'User not found/verified.'];
+    return [null, 'User not found/verified.', false];
   }
-    
-  return [null, await createUserInfoMsg(row, 'User Information', `Moderator Lookup on ${row.userid}`, server, Discord)];
+
+  return [null, await createUserInfoMsg(row, 'User Information', `Moderator Lookup on ${row.userid}`, server, Discord), true];
 };
 
-module.exports = {whoami, getUserByUsername, getUserById};
+module.exports = { whoami, getUserByUsername, getUserById };
