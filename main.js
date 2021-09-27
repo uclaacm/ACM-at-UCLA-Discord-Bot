@@ -16,7 +16,8 @@ let verified_role = null;
 let mod_role = null;
 let alumni_role = null;
 const isModOrAdmin = member =>
-  member.hasPermissions('ADMINISTRATOR') || member.roles.cache.has(mod_role.id);
+  member.permissions.has(Discord.Permissions.FLAGS.ADMINISTRATOR) ||
+  member.roles.cache.has(mod_role.id);
 
 // load commands
 const command_iam = require('./commands/iam');
