@@ -3,13 +3,13 @@ const sqlite = require('sqlite');
 const sqlite3 = require('sqlite3');
 const config = require('../config.' + process.env.NODE_ENV_MODE);
 
-const isModOrAdmin = member =>
-  member.permissions.has(Discord.Permissions.FLAGS.ADMINISTRATOR) ||
-  member.roles.cache.has(mod_role.id);
-
 // verify code and and role to access server
 // linked to VERIFY command
 const verify = async function(code, member, verified_role, mod_role, alumni_role) {
+  const isModOrAdmin = member =>
+    member.permissions.has(Discord.Permissions.FLAGS.ADMINISTRATOR) ||
+    member.roles.cache.has(mod_role.id);
+
   // open db
   let db = await sqlite.open({
     filename: config.db_path,
