@@ -1,3 +1,4 @@
+const Discord = require('discord.js');
 const sqlite = require('sqlite');
 const sqlite3 = require('sqlite3');
 const config = require('../config.' + process.env.NODE_ENV_MODE);
