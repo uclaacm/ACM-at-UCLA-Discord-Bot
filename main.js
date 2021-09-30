@@ -163,7 +163,7 @@ client.on('ready', async () => {
       {
         'name': 'code',
         'description': 'Code sent to your UCLA email (e.g. `314159`)',
-        'type': 4,
+        'type': 3,
         'required': true,
       }
     ],
