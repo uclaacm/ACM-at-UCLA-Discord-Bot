@@ -500,11 +500,8 @@ client.on('guildMemberAdd', async (member) => {
   });
 
   // get welcome message and user entry from db
-  let welcome_msg = null;
   let row = null;
   try {
-    let { message } = await db.get('SELECT message FROM messages WHERE message_id = ?', 'welcome');
-    welcome_msg = message;
     row = await db.get('SELECT * FROM users WHERE userid = ?', [member.id]);
   } catch (e) {
     console.error(e.toString());
@@ -523,15 +520,10 @@ client.on('guildMemberAdd', async (member) => {
     }
     server_member.setNickname(row.nickname + (row.pronouns ? ` (${row.pronouns})` : ''));
 
-    firstMsg = `Welcome back ${row.nickname} (${row.pronouns})!
+    firstMsg = `Welcome back ${row.nickname}!
 You have been auto-verified with your email address ${row.email}. If you think this is a mistake or you would like your information removed, please contact a Moderator.`;
+    member.send(firstMsg);
   }
-
-  else {
-    firstMsg = welcome_msg;
-  }
-
-  member.send(firstMsg);
 });
 
 client.login(process.env.DISCORD_API_KEY);
