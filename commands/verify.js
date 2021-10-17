@@ -75,7 +75,7 @@ const verify = async function(code, member, guest_role, verified_role, mod_role,
 
   try {
     // delete usercode entry
-    await db.run('DELETE FROM usercodes WHERE userid = ?', [author.id]);
+    await db.run('DELETE FROM usercodes WHERE userid = ?', [id]);
 
     // check if email is already verified
     // it's possible for two users to request a code on the same email
