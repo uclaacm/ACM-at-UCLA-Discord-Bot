@@ -11,6 +11,7 @@
     },
     "plugins": ["jest"],
     "rules": {
+        "no-control-regex": 0,
         "indent": [
             "error",
             2,

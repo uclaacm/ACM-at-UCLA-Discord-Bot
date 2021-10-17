@@ -5,7 +5,7 @@ const config = require('../config.' + process.env.NODE_ENV_MODE);
 
 // verify code and and role to access server
 // linked to VERIFY command
-const verify = async function(code, member, verified_role, mod_role, alumni_role) {
+const verify = async function(code, member, guest_role, verified_role, mod_role, alumni_role) {
   const isModOrAdmin = member =>
     member.permissions.has(Discord.Permissions.FLAGS.ADMINISTRATOR) ||
     member.roles.cache.has(mod_role.id);
@@ -52,22 +52,26 @@ const verify = async function(code, member, verified_role, mod_role, alumni_role
     return [null, 'Sorry, this code is either invalid/expired.'];
   }
 
-  // add verified role to user
-  try {
+  // regex matches and captures main domain name (index 1) and TLD (index 2)
+  // regex conforms to RFC 5322
+  // https://stackoverflow.com/a/201378 (modified to capture necessary groups)
+  let match_groups = row.email.match(
+    /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:([a-z0-9](?:[a-z0-9-]*[a-z0-9])?)\.)+([a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\]))/
+  );
+
+  if (row.affiliation === 'other' && !(match_groups && config.allowed_domains.includes(match_groups[1]))) {
+    await member.roles.add(guest_role);
+  }
+  else {
+    // add verified role to non-other ucla user
     await member.roles.add(verified_role);
     if (row.affiliation === 'alumni') { // and if alumni, add alumni role
       await member.roles.add(alumni_role);
     }
-  } catch (e) {
-    console.log(e.toString());
   }
 
   // set nickname: <name> (<pronouns>)
-  try {
-    await member.setNickname(row.nickname + (row_user ? ` (${row_user.pronouns})` : ''));
-  } catch (e) {
-    console.log(e.toString());
-  }
+  member.setNickname(row.nickname + (row_user ? ` (${row_user.pronouns})` : ''));
 
   try {
     // delete usercode entry
