@@ -1,6 +1,7 @@
 const sqlite = require('sqlite');
 const sqlite3 = require('sqlite3');
 const config = require('../config.' + process.env.NODE_ENV_MODE);
+const email_SES = require('./sendEmail');
 
 // generates a n-digit random code
 function genCode(n) {
@@ -13,7 +14,7 @@ function genCode(n) {
 
 // if email has not been verified, send verification code
 // linked to IAM command
-const iam = async function(userid, email, nickname, affiliation, sgMail) {
+const iam = async function (userid, email, nickname, affiliation) {
   // TODO: store affil_key and not entire string to reduce storage on db
   let affil_key = config.affiliation_map[affiliation];
   if (!affil_key) {
@@ -56,7 +57,7 @@ const iam = async function(userid, email, nickname, affiliation, sgMail) {
   // check if email is already verified
   let emailExists = null;
   try {
-    // TODO: treat .*.ucla.edu the same as ucla.edu for existence check
+    // FIXME: treat .*.ucla.edu the same as ucla.edu for existence check
     emailExists = await db.get('SELECT * FROM users WHERE email = ?', [email]);
   } catch (e) {
     console.error(e.toString());
@@ -70,19 +71,6 @@ const iam = async function(userid, email, nickname, affiliation, sgMail) {
 
   // send 6-digit code to provided email
   const code = genCode(config.discord.gen_code_length);
-  const msg = {
-    to: email,
-    from: config.sendgrid.sender,
-    templateId: config.sendgrid.template_id,
-    asm: {
-      group_id: config.sendgrid.group_id,
-    },
-    dynamic_template_data: {
-      nickname: nickname,
-      code: code,
-      email: email
-    },
-  };
   try {
     // store verification code in db
     await db.run(
@@ -102,7 +90,7 @@ const iam = async function(userid, email, nickname, affiliation, sgMail) {
       [userid, email, nickname, code, affiliation, email, nickname, code, affiliation]
     );
     // api call to send email
-    await sgMail.send(msg);
+    await email_SES.sendVerification(email, nickname, code);
   } catch (e) {
     console.error(e.toString());
     await db.close();
@@ -112,7 +100,7 @@ const iam = async function(userid, email, nickname, affiliation, sgMail) {
 
   return [
     null,
-    `Please check your email \`${email}\` for a 6-digit verification code. Verify using \`!verify <code>\``,
+    `Please check your email \`${email}\` for a 6-digit verification code. Verify using \`/verify\``,
   ];
 };
 

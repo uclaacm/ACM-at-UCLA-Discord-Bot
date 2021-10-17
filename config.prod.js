@@ -15,9 +15,8 @@ module.exports = {
     mod_role_name: 'Moderator',
     alumni_role_name: 'Alumni',
   },
-  sendgrid: {
-    template_id: 'd-b50eca776df84deab80256f097286492',
-    group_id: 15736,
+  ses: {
+    region: 'us-west-1',
     sender: 'acm@ucla.edu',
   },
   default_msgs: {

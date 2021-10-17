@@ -37,9 +37,8 @@ const setPronouns = async function(userid, pronouns, server) {
     await db.close();
     return [
       null,
-      `
-Sorry, I don't think you're verified!.
-Use \`!iam <affiliation> <name> <edu_email>\` to verify your email address.`,
+      `Sorry, I don't think you're verified!.
+Use \`/iam\` to verify your email address.`,
     ];
   }
 
@@ -64,14 +63,20 @@ Use \`!iam <affiliation> <name> <edu_email>\` to verify your email address.`,
 
   // set pronouns in nickname on server
   let member = await server.members.fetch(userid);
-  member.setNickname(`${row.nickname} (${pronouns})`);
-
-  return [
-    null,
-    `
-Successfully added your pronouns (${pronouns}) to your name in the server.
+  try {
+    await member.setNickname(`${row.nickname} (${pronouns})`);
+    return [
+      null,
+      ` Successfully added your pronouns (${pronouns}) to your name in the server.
 Thank you for making the server more inclusive!`
-  ];
+    ];
+  } catch (e) {
+    console.log(e.toString());
+    return [
+      null,
+      `Sorry, I don't have the permissions to add your pronouns (${pronouns}) to your name in the server.`
+    ];
+  }
 };
 
 // add major in database record
@@ -109,9 +114,8 @@ const setMajor = async function(userid, major) {
     await db.close();
     return [
       null,
-      `
-Sorry, I don't think you're verified!.
-Use \`!iam <affiliation> <name> <edu_email>\` and verify your email address.`,
+      `Sorry, I don't think you're verified!.
+Use \`/iam\` and verify your email address.`,
     ];
   }
 
@@ -175,9 +179,8 @@ const setYear = async function(userid, year) {
     await db.close();
     return [
       null,
-      `
-Sorry, I don't think you're verified!.
-Use \`!iam <affiliation> <name> <edu_email>\` and verify your email address.`,
+      `Sorry, I don't think you're verified!.
+Use \`/iam\` and verify your email address.`,
     ];
   }
 
@@ -236,9 +239,8 @@ const toggleTransfer = async function(userid) {
     await db.close();
     return [
       null,
-      `
-Sorry, I don't think you're verified!.
-Use \`!iam <affiliation> <name> <edu_email>\` and verify your email address.`,
+      `Sorry, I don't think you're verified!.
+Use \`/iam\` and verify your email address.`,
     ];
   }
 
@@ -299,8 +301,7 @@ const updateUserNickname = async function(userid, nickname, server) {
   if (!row) {
     return [
       null,
-      `
-Invalid/unverified user.`,
+      'Invalid/unverified user.',
     ];
   }
 
@@ -331,12 +332,21 @@ Invalid/unverified user.`,
       'User not found.'
     ];
   }
-  member.setNickname(nickname + (row.pronouns ? ` (${row.pronouns})` : ''));
 
-  return [
-    null,
-    `Successfully changed: ${row.nickname} -> ${nickname}.`
-  ];
+  try {
+    await member.setNickname(nickname + (row.pronouns ? ` (${row.pronouns})` : ''));
+
+    return [
+      null,
+      `Successfully changed: ${row.nickname} -> ${nickname}.`
+    ];
+  } catch (e) {
+    console.log(e.toString());
+    return [
+      null,
+      `Sorry, I don't have the permissions to change: ${row.nickname} -> ${nickname}.`
+    ];
+  }
 };
 
 module.exports = { setPronouns, setMajor, setYear, toggleTransfer, updateUserNickname };

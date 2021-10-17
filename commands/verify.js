@@ -1,22 +1,22 @@
+const Discord = require('discord.js');
 const sqlite = require('sqlite');
 const sqlite3 = require('sqlite3');
 const config = require('../config.' + process.env.NODE_ENV_MODE);
 
-const isModOrAdmin = (member, mod_role) =>
-  member.hasPermission('ADMINISTRATOR') ||
-  member.roles.cache.has(mod_role.id);
-
 // verify code and and role to access server
 // linked to VERIFY command
-const verify = async function(code, author, server, guest_role, verified_role, mod_role, alumni_role) {
+const verify = async function(code, member, guest_role, verified_role, mod_role, alumni_role) {
+  const isModOrAdmin = member =>
+    member.permissions.has(Discord.Permissions.FLAGS.ADMINISTRATOR) ||
+    member.roles.cache.has(mod_role.id);
+
   // open db
   let db = await sqlite.open({
     filename: config.db_path,
     driver: sqlite3.Database,
   });
 
-  // get member from the ACM server
-  let member = await server.members.fetch(author.id);
+  const id = member.user.id;
 
   // get iam details from usercodes table
   let row = null;
@@ -31,7 +31,7 @@ const verify = async function(code, author, server, guest_role, verified_role, m
       userid = ? AND
       code = ? AND
       expires_at > datetime('now')`,
-      [author.id, code]
+      [id, code]
     );
     row_user = await db.get(
       `
@@ -40,7 +40,7 @@ const verify = async function(code, author, server, guest_role, verified_role, m
     FROM users
     WHERE
       userid = ?`,
-      [author.id]
+      [id]
     );
   } catch (e) {
     console.error(e.toString());
@@ -104,14 +104,14 @@ const verify = async function(code, author, server, guest_role, verified_role, m
         email = ?,
         affiliation = ?`,
       [
-        author.id,
-        author.username,
-        author.discriminator,
+        id,
+        member.user.username,
+        member.user.discriminator,
         row.nickname,
         row.email,
         row.affiliation,
-        author.username,
-        author.discriminator,
+        member.user.username,
+        member.user.discriminator,
         row.nickname,
         row.email,
         row.affiliation
@@ -128,19 +128,18 @@ const verify = async function(code, author, server, guest_role, verified_role, m
     null,
     `Thanks ${row.nickname}! You have been verified and can now access the server! Please use the following commands to tell us a bit more about yourself!
     \`\`\`
-    !major <valid_major>    | Your major
-    !transfer               | Transfer student
-    !year <grad_year>       | Your grad year
-    !pronouns <pronouns>    | Max 10 characters
-    !whoami                 | View your information
-    !help                   | Show all commands
-    \`\`\`
-    ` + (isModOrAdmin(member, mod_role) ? `
+    /major <valid_major>    | Your major
+    /transfer               | Transfer student
+    /year <grad_year>       | Your grad year
+    /pronouns <pronouns>    | Max 10 characters
+    /whoami                 | View your information
+    /help                   | Show all commands
+    \`\`\`` + (isModOrAdmin(member, mod_role) ? `
     Since you're a Moderator, you can also use the following commands:
     \`\`\`
-    !name <userid> <new_name>                          | change userids nickname
-    !lookup <userid>                                   | lookup verified user
-    !stats <verified|major|year|transfer|affiliation>  | Useful for analytics
+    /name <userid> <new_name>                          | change userids nickname
+    /lookup <userid>                                   | lookup verified user
+    /stats <verified|major|year|transfer|affiliation>  | Useful for analytics
     \`\`\`
     ` : '')
   ];
