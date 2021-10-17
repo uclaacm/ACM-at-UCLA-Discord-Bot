@@ -14,7 +14,7 @@ function genCode(n) {
 
 // if email has not been verified, send verification code
 // linked to IAM command
-const iam = async function (userid, email, nickname, affiliation) {
+const iam = async function(userid, email, nickname, affiliation) {
   // TODO: store affil_key and not entire string to reduce storage on db
   let affil_key = config.affiliation_map[affiliation];
   if (!affil_key) {
@@ -37,7 +37,7 @@ const iam = async function (userid, email, nickname, affiliation) {
   else {
     // check email against allowed domains
     // for non-other roles
-    if (!(match_groups && config.allowed_domains.includes(match_groups[1]))) {
+    if (!(match_groups && config.allowed_domains.includes(match_groups[1])) || match_groups[2] !== 'edu') {
       return [null, 'Please enter a valid UCLA email address (example@cs.ucla.edu).'];
     }
   }
