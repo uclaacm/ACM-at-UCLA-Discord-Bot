@@ -349,4 +349,97 @@ const updateUserNickname = async function(userid, nickname, server) {
   }
 };
 
-module.exports = { setPronouns, setMajor, setYear, toggleTransfer, updateUserNickname };
+const toggleCommitteeOfficer = async function(assigner, assigneeInfo, server) {
+  /**
+   * Adds or removes the 'ACM Officer' and '<Committee> Officer' roles from the specified
+   * user based on the assigner's committee
+   *
+   * @param assigner - the GuildMember object representing the person calling the command
+   * @param assigneeInfo - username or userid of user whose role is to be assigned
+   * @param server - current Discord.Guild object
+   * @returns - Array containing: [error object, message]
+   */
+
+  // If userid not supplied, query from database
+  let assigneeId;
+  if (assigneeInfo.match('.+#([0-9]){4}')) {
+    const [username, discriminator] = assigneeInfo.split('#');
+    const db = await sqlite.open({
+      filename: config.db_path,
+      driver: sqlite3.Database,
+    });
+    let row;
+    try {
+      row = await db.get(
+        `
+        SELECT userid
+        FROM users
+        WHERE
+            username = ? AND
+            discriminator = ?
+        `,
+        [username, discriminator]
+      );
+      if (!row) return [null, 'Invalid/unverified user.'];
+      assigneeId = row.userid;
+    } catch (e) {
+      console.error(e.toString());
+      return [{ message: e.toString() }, null];
+    } finally {
+      await db.close();
+    }
+  } else {
+    assigneeId = assigneeInfo;
+  }
+
+  // Get assignee GuildMember object
+  let assignee;
+  try {
+    assignee = await server.members.fetch(assigneeId);
+  } catch(e) {
+    console.error(e);
+    return [{ message: e.toString() }, 'Invalid/unverified user.'];
+  }
+
+  let assignerCommittee;
+  if (assigner.roles.cache.some(role => role.name === 'PVP')) {
+    // PVP assigns Board officers
+    assignerCommittee = 'Board';
+  } else {
+    // Find matching committee officer role
+    for (const committee of config.committees_list) {
+      if (assigner.roles.cache.some(role => role.name === `${committee} Officer`)) {
+        assignerCommittee = committee;
+        break;
+      }
+    }
+  }
+  if (!assignerCommittee) {
+    return [
+      null,
+      'Error: caller must be a President/Vice-President or have a committee officer role'
+    ];
+  }
+  // Get officer roles based on assigner's committee
+  const acm_officer_role = server.roles.cache.find(role => role.name === 'ACM Officer');
+  const comm_officer_role = server.roles.cache.find(role => role.name === `${assignerCommittee} Officer`);
+
+  // Toggle officer roles
+  if (assignee.roles.cache.some(role => role.name === 'ACM Officer')) {
+    try {
+      assignee.roles.remove([acm_officer_role, comm_officer_role]);
+      return [null, `Successfully removed officer roles from user ${assigneeInfo}.`];
+    } catch(e) {
+      return [{ message: e.toString() }, `Unable to remove officer roles from user ${assigneeInfo}.`];
+    }
+  } else {
+    try {
+      assignee.roles.add([acm_officer_role, comm_officer_role]);
+      return [null, `Successfully assigned officer roles to user ${assigneeInfo}.`];
+    } catch(e) {
+      return [{ message: e.toString() }, `Unable to assign officer roles to user ${assigneeInfo}.`];
+    }
+  }
+};
+
+module.exports = { setPronouns, setMajor, setYear, toggleTransfer, updateUserNickname, toggleCommitteeOfficer };
