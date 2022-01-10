@@ -16,6 +16,8 @@ let guest_role = null;
 let verified_role = null;
 let mod_role = null;
 let alumni_role = null;
+let pvp_role = null;
+let comm_pres_role = null;
 const isModOrAdmin = member =>
   member.permissions.has(Discord.Permissions.FLAGS.ADMINISTRATOR) ||
   member.roles.cache.has(mod_role.id);
@@ -25,7 +27,8 @@ const command_iam = require('./commands/iam');
 const command_verify = require('./commands/verify');
 
 // set user info
-// contains: setPronouns, setMajor, setYear, toggleTransfer, updateUserNickname
+// contains: setPronouns, setMajor, setYear, toggleTransfer,
+//           updateUserNickname, toggleCommitteeOfficer
 const command_setUser = require('./commands/setUser');
 
 // get user info
@@ -51,6 +54,8 @@ client.on('ready', async () => {
   verified_role = server.roles.cache.find((role) => role.name === config.discord.verified_role_name);
   mod_role = server.roles.cache.find((role) => role.name === config.discord.mod_role_name);
   alumni_role = server.roles.cache.find((role) => role.name === config.discord.alumni_role_name);
+  pvp_role = server.roles.cache.find((role) => role.name === config.discord.pvp_role_name);
+  comm_pres_role = server.roles.cache.find((role) => role.name === config.discord.committee_pres_role_name);
 
   // open db
   let db = await sqlite.open({
@@ -208,6 +213,20 @@ client.on('ready', async () => {
     description: 'View your registered information',
   });
 
+  const officerToggleCommand = await server.commands.create({
+    name: 'officer',
+    description: 'Toggle committee officer role for a specified user',
+    options: [
+      {
+        'name': 'user',
+        'description': '`<username>#<discriminator> | <userid>`',
+        'type': 3,
+        'required': true,
+      },
+    ],
+    defaultPermission: false,
+  });
+
   let commandCreateRes = await server.commands.create({
     name: 'lookup',
     description: 'Lookup a user',
@@ -334,6 +353,24 @@ client.on('ready', async () => {
       }],
     });
   });
+
+  // officer command to be used by PVP and committtee pres only
+  fullPermissions.push({
+    id: officerToggleCommand.id,
+    permissions: [
+      {
+        id: pvp_role.id,
+        type: 'ROLE',
+        permission: true,
+      },
+      {
+        id: comm_pres_role.id,
+        type: 'ROLE',
+        permission: true,
+      },
+    ]
+  });
+
   server.commands.permissions.set({ fullPermissions });
 });
 
@@ -398,6 +435,11 @@ client.on('interactionCreate', async interaction => {
 
   else if (command === 'transfer') {
     [err, message] = await command_setUser.toggleTransfer(userId);
+  }
+
+  else if (command === 'officer') {
+    let assignee = args.get('user').value;
+    [err, message] = await command_setUser.toggleCommitteeOfficer(member, assignee, server);
   }
 
   else if (command === 'whoami') {

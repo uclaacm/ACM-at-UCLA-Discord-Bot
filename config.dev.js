@@ -14,6 +14,8 @@ module.exports = {
     verified_role_name: 'Verified',
     mod_role_name: 'Moderator',
     alumni_role_name: 'Alumni',
+    pvp_role_name: 'PVP',
+    committee_pres_role_name: 'Committee President'
   },
   ses: {
     region: 'us-west-1',
@@ -32,6 +34,16 @@ To obtain your verification code, reply to this message with the following comma
 \`\`\`
 `,
   },
+  committees_list: [
+    'AI',
+    'Cyber',
+    'Design',
+    'Hack',
+    'ICPC',
+    'Studio',
+    'Teach LA',
+    'ACM-W'
+  ],
   majors_list: [
     'aerospace engineering',
     'african american studies',
