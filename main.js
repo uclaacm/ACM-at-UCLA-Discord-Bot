@@ -219,7 +219,7 @@ client.on('ready', async () => {
     options: [
       {
         'name': 'user',
-        'description': '`<username>#<discriminator> | <userid>`',
+        'description': '`Specify target user either as <username>#<discriminator> or <userid>`',
         'type': 3,
         'required': true,
       },
