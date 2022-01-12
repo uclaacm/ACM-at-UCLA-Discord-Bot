@@ -438,23 +438,33 @@ const toggleCommitteeOfficer = async function(assigner, assigneeInfo, server) {
   const comm_officer_role = server.roles.cache.find(role => role.name === `${assignerCommittee} Officer`);
 
   // Toggle officer roles
-  if (assignee.roles.cache.some(role => role.name === acm_officer_role.name) &&
-      assignee.roles.cache.some(role => role.name === comm_officer_role.name)) {
-    try {
-      await assignee.roles.remove([acm_officer_role, comm_officer_role]);
-      return [null, `Removed officer roles from user ${assigneeInfo}.`];
-    } catch(e) {
-      return [{ message: e.toString() }, `Unable to remove officer roles from user ${assigneeInfo}.`];
+  if (assignee.roles.cache.some(role => role.name === acm_officer_role.name)) {
+    if (assignee.roles.cache.some(role => role.name === comm_officer_role.name)) {
+      try {
+        await assignee.roles.remove([acm_officer_role, comm_officer_role]);
+        return [
+          null,
+          `Removed roles ${acm_officer_role.name} and ${comm_officer_role.name} from user ${assigneeInfo}.`
+        ];
+      } catch(e) {
+        return [{ message: e.toString() }, null];
+      }
+    } else {
+      return [null, 'Action not permitted. User is already an officer but is not in your committee.'];
     }
-  } else if (assignee.roles.cache.some(role => role.name === acm_officer_role.name) &&
-             !assignee.roles.cache.some(role => role.name === comm_officer_role.name)) {
-    return [null, 'Action not permitted. User is already an officer in a different committee.'];
   } else {
-    try {
-      await assignee.roles.add([acm_officer_role, comm_officer_role]);
-      return [null, `Assigned officer roles to user ${assigneeInfo}.`];
-    } catch(e) {
-      return [{ message: e.toString() }, `Unable to assign officer roles to user ${assigneeInfo}.`];
+    if (!assignee.roles.cache.some(role => role.name === comm_officer_role.name)) {
+      try {
+        await assignee.roles.add([acm_officer_role, comm_officer_role]);
+        return [
+          null,
+          `Assigned roles ${acm_officer_role.name} and ${comm_officer_role.name} to user ${assigneeInfo}.`
+        ];
+      } catch(e) {
+        return [{ message: e.toString() }, null];
+      }
+    } else {
+      return [null, `Error: user has role ${comm_officer_role.name} but not ${acm_officer_role.name}.`];
     }
   }
 };
