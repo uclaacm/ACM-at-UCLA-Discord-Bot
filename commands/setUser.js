@@ -354,6 +354,12 @@ const toggleCommitteeOfficer = async function(assigner, assigneeInfo, server) {
    * Adds or removes the 'ACM Officer' and '<Committee> Officer' roles from the specified
    * assignee based on the assigner's committee
    *
+   * Note: this command assumes that
+   * 1) The assigner has the Committee President or PVP role
+   * 2) If the assigner is a Committee President, they have exactly one <Committee> Officer role
+   * 3) If an assignee does not have the ACM Officer role, then they also do not have a
+   *    <Committee> Officer role
+   *
    * @param assigner - the GuildMember object representing the person calling the command
    * @param assigneeInfo - username or userid of user whose role is to be assigned
    * @param server - current Discord.Guild object
@@ -390,7 +396,10 @@ const toggleCommitteeOfficer = async function(assigner, assigneeInfo, server) {
     }
   } else {
     if (!assigneeInfo.match('([0-9])+')) {
-      return [null, 'Invalid user format'];
+      return [
+        null,
+        'Invalid user format. Please supply either a user in <username>#<discriminator> format or a user ID'
+      ];
     }
     assigneeId = assigneeInfo;
   }
@@ -419,7 +428,7 @@ const toggleCommitteeOfficer = async function(assigner, assigneeInfo, server) {
     if (!assignerCommittee) {
       return [
         null,
-        'Command failed. If you are a committee president, make sure that you also have ' +
+        'Action not permitted. If you are a committee president, make sure that you also have ' +
         'a committee officer role before running this command.'
       ];
     }
@@ -429,18 +438,21 @@ const toggleCommitteeOfficer = async function(assigner, assigneeInfo, server) {
   const comm_officer_role = server.roles.cache.find(role => role.name === `${assignerCommittee} Officer`);
 
   // Toggle officer roles
-  if (assignee.roles.cache.some(role => role.name === acm_officer_role.name) ||
+  if (assignee.roles.cache.some(role => role.name === acm_officer_role.name) &&
       assignee.roles.cache.some(role => role.name === comm_officer_role.name)) {
     try {
       await assignee.roles.remove([acm_officer_role, comm_officer_role]);
-      return [null, `Successfully removed officer roles from user ${assigneeInfo}.`];
+      return [null, `Removed officer roles from user ${assigneeInfo}.`];
     } catch(e) {
       return [{ message: e.toString() }, `Unable to remove officer roles from user ${assigneeInfo}.`];
     }
+  } else if (assignee.roles.cache.some(role => role.name === acm_officer_role.name) &&
+             !assignee.roles.cache.some(role => role.name === comm_officer_role.name)) {
+    return [null, 'Action not permitted. User is already an officer in a different committee.'];
   } else {
     try {
       await assignee.roles.add([acm_officer_role, comm_officer_role]);
-      return [null, `Successfully assigned officer roles to user ${assigneeInfo}.`];
+      return [null, `Assigned officer roles to user ${assigneeInfo}.`];
     } catch(e) {
       return [{ message: e.toString() }, `Unable to assign officer roles to user ${assigneeInfo}.`];
     }

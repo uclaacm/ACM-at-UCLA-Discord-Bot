@@ -215,11 +215,11 @@ client.on('ready', async () => {
 
   const officerToggleCommand = await server.commands.create({
     name: 'officer',
-    description: 'Toggle committee officer role for a specified user',
+    description: 'Toggle ACM officer and committee officer roles for a specified user',
     options: [
       {
         'name': 'user',
-        'description': '`Specify target user either as <username>#<discriminator> or <userid>`',
+        'description': 'Specify target user either as <username>#<discriminator> or <userid>',
         'type': 3,
         'required': true,
       },
