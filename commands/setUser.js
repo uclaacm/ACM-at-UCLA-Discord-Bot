@@ -2,6 +2,80 @@ const sqlite = require('sqlite');
 const sqlite3 = require('sqlite3');
 const config = require('../config.' + process.env.NODE_ENV_MODE);
 
+const audit = async function(server, alumni_role) {
+  // open db
+  let db = await sqlite.open({
+    filename: config.db_path,
+    driver: sqlite3.Database,
+  });
+
+  let today = new Date();
+  let month = String(today.getMonth() + 1).padStart(2, '0');  // 0 indexing, i.e. January is 0
+  let year = today.getFullYear();
+  //  if the command is run July 2021, it would catch everyone who had just graduated
+  // while if the command was run in May, it would not affect the students who have yet to graduate
+  if (month < 6)
+    year--;
+
+  let rows = null;
+  try {
+    rows = await db.all(
+      `
+    SELECT
+        userid
+    FROM users
+    WHERE
+        grad_year <= ?
+    AND
+        affiliation = 'student'`,
+      [year]
+    );
+  } catch (e) {
+    console.error(e.toString());
+    await db.close();
+    return [{ message: e.toString() }, null];
+  }
+
+  try {
+    await db.run(
+      `
+      UPDATE
+          users
+      SET
+          affiliation = 'alumni'
+      WHERE
+          grad_year <= ?
+      AND
+          affiliation  = 'student'`,
+      [year]
+    );
+  } catch (e) {
+    console.error(e.toString());
+    await db.close();
+    return [{ message: e.toString() }, null];
+  }
+
+  await db.close();
+
+  rows.forEach(async(user) => {
+    let id = user['userid'];
+    let server_member = await server.members.fetch(id);
+    try {
+      await server_member.roles.remove('ACM Officer');
+    } catch (e) {
+      console.error(e.toString());
+    }
+    await server_member.roles.add(alumni_role);
+
+    //console.log(id);
+  });
+
+  return [
+    null,
+    `Successfully audited. Thank you!`
+  ];
+};
+
 // add pronouns to nickname
 // linked to PRONOUNS command
 const setPronouns = async function(userid, pronouns, server) {
@@ -349,4 +423,4 @@ const updateUserNickname = async function(userid, nickname, server) {
   }
 };
 
-module.exports = { setPronouns, setMajor, setYear, toggleTransfer, updateUserNickname };
+module.exports = { audit, setPronouns, setMajor, setYear, toggleTransfer, updateUserNickname };

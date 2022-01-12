@@ -239,6 +239,13 @@ client.on('ready', async () => {
   modCommandIds.push(commandCreateRes.id);
 
   commandCreateRes = await server.commands.create({
+    name: 'audit',
+    description: 'Mark any students that have graduated as alumni',
+    defaultPermission: false,
+  });
+  modCommandIds.push(commandCreateRes.id);
+
+  commandCreateRes = await server.commands.create({
     name: 'name',
     description: 'Update user\'s nickname',
     options: [
@@ -402,6 +409,10 @@ client.on('interactionCreate', async interaction => {
 
   else if (command === 'whoami') {
     [err, message, embed] = await command_getUser.whoami(userId, server, Discord);
+  }
+
+  else if (command === 'audit') {
+    [err, message] = await command_setUser.audit(server, alumni_role);
   }
 
   else if (command === 'lookup') {
