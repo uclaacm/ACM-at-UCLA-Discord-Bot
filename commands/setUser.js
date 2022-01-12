@@ -72,7 +72,7 @@ const audit = async function(server, alumni_role) {
 
   return [
     null,
-    `Successfully audited. Thank you!`
+    'Successfully audited. Thank you!'
   ];
 };
 
