@@ -2,7 +2,7 @@ const sqlite = require('sqlite');
 const sqlite3 = require('sqlite3');
 const config = require('../config.' + process.env.NODE_ENV_MODE);
 
-const audit = async function(server, alumni_role) {
+const audit = async function(server, alumni_role, officer_role, alumni_officer_role) {
   // open db
   let db = await sqlite.open({
     filename: config.db_path,
@@ -60,14 +60,13 @@ const audit = async function(server, alumni_role) {
   rows.forEach(async(user) => {
     let id = user['userid'];
     let server_member = await server.members.fetch(id);
-    try {
-      await server_member.roles.remove('ACM Officer');
-    } catch (e) {
-      console.error(e.toString());
-    }
-    await server_member.roles.add(alumni_role);
 
-    //console.log(id);
+    if (server_member.roles.cache.some((role) => role.name === officer_role.name)) {
+      await server_member.roles.remove(officer_role.id);
+      await server_member.roles.add(alumni_officer_role);
+    }
+
+    await server_member.roles.add(alumni_role);
   });
 
   return [

@@ -71,6 +71,7 @@ const verify = async function(code, member, guest_role, verified_role, mod_role,
   }
 
   // set nickname: <name> (<pronouns>)
+  // TODO: DISCORD API PERMISSIONS ERROR CHECKING for when user has higher role than bot
   member.setNickname(row.nickname + (row_user ? ` (${row_user.pronouns})` : ''));
 
   try {

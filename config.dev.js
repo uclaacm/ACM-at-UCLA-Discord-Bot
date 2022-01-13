@@ -14,10 +14,12 @@ module.exports = {
     verified_role_name: 'Verified',
     mod_role_name: 'Moderator',
     alumni_role_name: 'Alumni',
+    officer_role_name: 'ACM Officer',
+    officer_alumni_role_name: 'ACM Officer Emeritus',
   },
   ses: {
     region: 'us-west-1',
-    sender: 'smahadev369@g.ucla.edu',
+    sender: 'acm@ucla.edu',
   },
   default_msgs: {
     welcome: `

@@ -16,6 +16,10 @@ let guest_role = null;
 let verified_role = null;
 let mod_role = null;
 let alumni_role = null;
+let officer_role = null;
+let alumni_officer_role = null;
+
+
 const isModOrAdmin = member =>
   member.permissions.has(Discord.Permissions.FLAGS.ADMINISTRATOR) ||
   member.roles.cache.has(mod_role.id);
@@ -51,6 +55,8 @@ client.on('ready', async () => {
   verified_role = server.roles.cache.find((role) => role.name === config.discord.verified_role_name);
   mod_role = server.roles.cache.find((role) => role.name === config.discord.mod_role_name);
   alumni_role = server.roles.cache.find((role) => role.name === config.discord.alumni_role_name);
+  officer_role = server.roles.cache.find((role) => role.name === config.discord.officer_role_name);
+  alumni_officer_role = server.roles.cache.find((role) => role.name === config.discord.officer_alumni_role_name);
 
   // open db
   let db = await sqlite.open({
@@ -412,7 +418,7 @@ client.on('interactionCreate', async interaction => {
   }
 
   else if (command === 'audit') {
-    [err, message] = await command_setUser.audit(server, alumni_role);
+    [err, message] = await command_setUser.audit(server, alumni_role, officer_role, alumni_officer_role);
   }
 
   else if (command === 'lookup') {
