@@ -11,6 +11,7 @@ const client = new Discord.Client({
     Discord.Intents.FLAGS.GUILD_MEMBERS
   ]
 });
+
 let server = null;
 let guest_role = null;
 let verified_role = null;
@@ -18,6 +19,7 @@ let mod_role = null;
 let alumni_role = null;
 let officer_role = null;
 let alumni_officer_role = null;
+let pvp_role = null;
 
 
 const isModOrAdmin = member =>
@@ -57,6 +59,8 @@ client.on('ready', async () => {
   alumni_role = server.roles.cache.find((role) => role.name === config.discord.alumni_role_name);
   officer_role = server.roles.cache.find((role) => role.name === config.discord.officer_role_name);
   alumni_officer_role = server.roles.cache.find((role) => role.name === config.discord.officer_alumni_role_name);
+  pvp_role = server.roles.cache.find((role) => role.name === config.discord.pvp_role_name);
+
 
   // open db
   let db = await sqlite.open({
@@ -214,6 +218,12 @@ client.on('ready', async () => {
     description: 'View your registered information',
   });
 
+  const auditCommand = await server.commands.create({
+    name: 'audit',
+    description: 'Mark any students that have graduated as alumni',
+    defaultPermission: false,
+  });
+
   let commandCreateRes = await server.commands.create({
     name: 'lookup',
     description: 'Lookup a user',
@@ -240,13 +250,6 @@ client.on('ready', async () => {
         'required': true,
       }
     ],
-    defaultPermission: false,
-  });
-  modCommandIds.push(commandCreateRes.id);
-
-  commandCreateRes = await server.commands.create({
-    name: 'audit',
-    description: 'Mark any students that have graduated as alumni',
     defaultPermission: false,
   });
   modCommandIds.push(commandCreateRes.id);
@@ -347,6 +350,16 @@ client.on('ready', async () => {
       }],
     });
   });
+
+  fullPermissions.push({
+    id: auditCommand.id,
+    permissions: [{
+      id: pvp_role.id,
+      type: 'ROLE',
+      permission: true,
+    }]
+  });
+
   server.commands.permissions.set({ fullPermissions });
 });
 

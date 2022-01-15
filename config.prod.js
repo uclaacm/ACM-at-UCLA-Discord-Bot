@@ -16,6 +16,7 @@ module.exports = {
     alumni_role_name: 'Alumni',
     officer_role_name: 'ACM Officer',
     officer_alumni_role_name: 'ACM Officer Emeritus',
+    pvp_role_name: 'PVP',
   },
   ses: {
     region: 'us-west-1',
