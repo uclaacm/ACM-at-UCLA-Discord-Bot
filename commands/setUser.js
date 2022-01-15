@@ -2,12 +2,39 @@ const sqlite = require('sqlite');
 const sqlite3 = require('sqlite3');
 const config = require('../config.' + process.env.NODE_ENV_MODE);
 
-const audit = async function(server, alumni_role, officer_role, alumni_officer_role) {
+const audit = async function(userid, server, alumni_role, officer_role, alumni_officer_role) {
   // open db
   let db = await sqlite.open({
     filename: config.db_path,
     driver: sqlite3.Database,
   });
+
+  // check if user is verified
+  let row = null;
+  try {
+    row = await db.get(
+      `
+     SELECT
+         userid, nickname
+     FROM users
+     WHERE
+         userid = ?`,
+      [userid]
+    );
+  } catch (e) {
+    console.error(e.toString());
+    await db.close();
+    return [{ message: e.toString() }, null];
+  }
+
+  if (!row) {
+    await db.close();
+    return [
+      null,
+      `Sorry, I don't think you're verified!.
+Use \`/iam\` to verify your email address.`,
+    ];
+  }
 
   let today = new Date();
   let month = String(today.getMonth() + 1).padStart(2, '0');  // 0 indexing, i.e. January is 0

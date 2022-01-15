@@ -431,7 +431,7 @@ client.on('interactionCreate', async interaction => {
   }
 
   else if (command === 'audit') {
-    [err, message] = await command_setUser.audit(server, alumni_role, officer_role, alumni_officer_role);
+    [err, message] = await command_setUser.audit(userId, server, alumni_role, officer_role, alumni_officer_role);
   }
 
   else if (command === 'lookup') {
