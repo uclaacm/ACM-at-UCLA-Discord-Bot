@@ -351,14 +351,12 @@ const updateUserNickname = async function(userid, nickname, server) {
 
 const toggleCommitteeOfficer = async function(assigner, assigneeInfo, server) {
   /**
-   * Adds or removes the 'ACM Officer' and '<Committee> Officer' roles from the specified
-   * assignee based on the assigner's committee
+   * Toggles the "<committee> Officer" rule for target user. The "ACM Officer" is also added
+   * or removed based on the current number of officer roles the user has.
    *
    * Note: this command assumes that
    * 1) The assigner has the Committee President or PVP role
    * 2) If the assigner is a Committee President, they have exactly one <Committee> Officer role
-   * 3) If an assignee does not have the ACM Officer role, then they also do not have a
-   *    <Committee> Officer role
    *
    * @param assigner - the GuildMember object representing the person calling the command
    * @param assigneeInfo - username or userid of user whose role is to be assigned
@@ -410,22 +408,21 @@ const toggleCommitteeOfficer = async function(assigner, assigneeInfo, server) {
     assignee = await server.members.fetch(assigneeId);
   } catch(e) {
     console.error(e);
-    return [{ message: e.toString() }, 'Invalid/unverified user.'];
+    return [{ message: e.toString() }, ''];
   }
 
-  // Determine assigner's committee
-  let assignerCommittee;
+  // Determine target committee based on assigner committee
+  let targetRoleName;
   if (assigner.roles.cache.some(role => role.name === 'PVP')) {
     // PVP assigns Board officers
-    assignerCommittee = 'Board';
+    targetRoleName = 'Board Officer';
   } else {
-    for (const committee of config.committees_list) {
-      if (assigner.roles.cache.some(role => role.name === `${committee} Officer`)) {
-        assignerCommittee = committee;
-        break;
+    assigner.roles.cache.forEach(assignerRole => {
+      if (config.committee_officer_roles.some(role => role === assignerRole.name)) {
+        targetRoleName = assignerRole.name;
       }
-    }
-    if (!assignerCommittee) {
+    });
+    if (!targetRoleName) {
       return [
         null,
         'Action not permitted. If you are a committee president, make sure that you also have ' +
@@ -434,37 +431,68 @@ const toggleCommitteeOfficer = async function(assigner, assigneeInfo, server) {
     }
   }
   // Officer roles to be assigned based on assigner's committee
-  const acm_officer_role = server.roles.cache.find(role => role.name === 'ACM Officer');
-  const comm_officer_role = server.roles.cache.find(role => role.name === `${assignerCommittee} Officer`);
+  const acmOfficerRole = server.roles.cache.find(role => role.name === 'ACM Officer');
+  const commOfficerRole = server.roles.cache.find(role => role.name === targetRoleName);
+
+  // Determine user's officer roles
+  let hasAcmOfficerRole = false;
+  let hasTargetCommitteeRole = false;
+  let hasOtherCommitteeRole = false;
+  assignee.roles.cache.forEach(userRole => {
+    if (userRole.name === acmOfficerRole.name) {
+      hasAcmOfficerRole = true;
+    } else if (userRole.name === commOfficerRole.name) {
+      hasTargetCommitteeRole = true;
+    } else if (config.committee_officer_roles.some(role => role === userRole.name)) {
+      hasOtherCommitteeRole = true;
+    }
+  });
 
   // Toggle officer roles
-  if (assignee.roles.cache.some(role => role.name === acm_officer_role.name)) {
-    if (assignee.roles.cache.some(role => role.name === comm_officer_role.name)) {
+  if (hasAcmOfficerRole) {
+    if (hasTargetCommitteeRole) {
       try {
-        await assignee.roles.remove([acm_officer_role, comm_officer_role]);
-        return [
-          null,
-          `Removed roles ${acm_officer_role.name} and ${comm_officer_role.name} from user ${assigneeInfo}.`
-        ];
+        // Remove committee officer role
+        // If user has no other officer roles, remove ACM officer role as well
+        if (hasOtherCommitteeRole) {
+          await assignee.roles.remove(commOfficerRole);
+          return [null, `Removed role ${commOfficerRole.name} from user ${assigneeInfo}.`];
+        } else {
+          await assignee.roles.remove([commOfficerRole, acmOfficerRole]);
+          return [null, `Removed roles ${acmOfficerRole.name} and ${commOfficerRole.name} from user ${assigneeInfo}.`];
+        }
       } catch(e) {
         return [{ message: e.toString() }, null];
       }
     } else {
-      return [null, 'Action not permitted. User is already an officer but is not in your committee.'];
+      // Add only target committee role
+      try {
+        await assignee.roles.add(commOfficerRole);
+        return [null, `Assigned role ${commOfficerRole.name} to user ${assigneeInfo}.`];
+      } catch(e) {
+        return [{ message: e.toString() }, null];
+      }
     }
   } else {
-    if (!assignee.roles.cache.some(role => role.name === comm_officer_role.name)) {
+    if (assignee.roles.cache.some(role => role.name === commOfficerRole.name)) {
+      // Add only ACM officer role
       try {
-        await assignee.roles.add([acm_officer_role, comm_officer_role]);
+        await assignee.roles.add(acmOfficerRole);
         return [
           null,
-          `Assigned roles ${acm_officer_role.name} and ${comm_officer_role.name} to user ${assigneeInfo}.`
+          `Assigned role ${acmOfficerRole.name} to user ${assigneeInfo}.`
         ];
       } catch(e) {
         return [{ message: e.toString() }, null];
       }
     } else {
-      return [null, `Error: user has role ${comm_officer_role.name} but not ${acm_officer_role.name}.`];
+      // Add both ACM officer and committee officer roles to user
+      try {
+        await assignee.roles.add([acmOfficerRole, commOfficerRole]);
+        return [null, `Assigned roles ${acmOfficerRole.name} and ${commOfficerRole.name} to user ${assigneeInfo}.`];
+      } catch(e) {
+        return [{ message: e.toString() }, null];
+      }
     }
   }
 };
