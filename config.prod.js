@@ -34,15 +34,15 @@ To obtain your verification code, reply to this message with the following comma
 \`\`\`
 `,
   },
-  committees_list: [
-    'AI',
-    'Cyber',
-    'Design',
-    'Hack',
-    'ICPC',
-    'Studio',
-    'Teach LA',
-    'ACM-W'
+  committee_officer_roles: [
+    'AI Officer',
+    'Cyber Officer',
+    'Design Officer',
+    'Hack Officer',
+    'ICPC Officer',
+    'Studio Officer',
+    'Teach LA Officer',
+    'ACM-W Officer'
   ],
   majors_list: [
     'aerospace engineering',
