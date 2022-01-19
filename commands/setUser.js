@@ -84,21 +84,29 @@ Use \`/iam\` to verify your email address.`,
 
   await db.close();
 
+  let count = 0;
   rows.forEach(async(user) => {
     let id = user['userid'];
     let server_member = await server.members.fetch(id);
 
-    if (server_member.roles.cache.some((role) => role.name === officer_role.name)) {
-      await server_member.roles.remove(officer_role.id);
-      await server_member.roles.add(alumni_officer_role);
-    }
+    if(server_member) {
+      try {
+        if (server_member.roles.cache.some((role) => role.name === officer_role.name)) {
+          await server_member.roles.remove(officer_role.id);
+          await server_member.roles.add(alumni_officer_role);
+        }
 
-    await server_member.roles.add(alumni_role);
+        await server_member.roles.add(alumni_role);
+        count++;
+      } catch(e) {
+        console.error(e.toString());
+      }
+    }
   });
 
   return [
     null,
-    'Successfully audited. Thank you!'
+    `Audit successful. ${count === 0 ? 'No users to update.' : `Updated ${count} user${count > 1 ? 's' : ''}.`} Thank you!`
   ];
 };
 
