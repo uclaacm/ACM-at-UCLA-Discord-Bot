@@ -5,6 +5,7 @@ module.exports = {
   affiliation_map: {
     student: 's',
     alumni: 'a',
+    faculty: 'f',
     other: 'o',
   },
   discord: {
@@ -14,6 +15,8 @@ module.exports = {
     verified_role_name: 'Verified',
     mod_role_name: 'Moderator',
     alumni_role_name: 'Alumni',
+    student_role_name: 'Student',
+    faculty_role_name: 'Faculty',
     officer_role_name: 'ACM Officer',
     officer_alumni_role_name: 'ACM Officer Emeritus',
     pvp_role_name: 'PVP',
