@@ -124,6 +124,10 @@ client.on('ready', async () => {
             'value': 'alumni'
           },
           {
+            'name': 'UCLA Faculty and Staff',
+            'value': 'faculty'
+          },
+          {
             'name': 'Other',
             'value': 'other'
           }
@@ -361,6 +365,7 @@ client.on('interactionCreate', async interaction => {
     let nickname = args.get('name').value;
     let email = args.get('email').value.toLowerCase();
     [err, message] = await command_iam.iam(
+      server,
       userId,
       email,
       nickname,

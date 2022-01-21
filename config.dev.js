@@ -5,6 +5,7 @@ module.exports = {
   affiliation_map: {
     student: 's',
     alumni: 'a',
+    faculty: 'f',
     other: 'o',
   },
   discord: {
@@ -14,10 +15,12 @@ module.exports = {
     verified_role_name: 'Verified',
     mod_role_name: 'Moderator',
     alumni_role_name: 'Alumni',
+    student_role_name: 'Student',
+    faculty_role_name: 'Faculty',
   },
   ses: {
     region: 'us-west-1',
-    sender: 'smahadev369@g.ucla.edu',
+    sender: 'acm@ucla.edu',
   },
   default_msgs: {
     welcome: `
