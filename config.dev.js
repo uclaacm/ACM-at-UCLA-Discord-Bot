@@ -13,6 +13,7 @@ module.exports = {
     guest_role_name: 'Guest',
     verified_role_name: 'Verified',
     mod_role_name: 'Moderator',
+    student_role_name: 'Student',
     alumni_role_name: 'Alumni',
     officer_role_name: 'ACM Officer',
     officer_alumni_role_name: 'ACM Officer Emeritus',

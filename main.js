@@ -16,6 +16,7 @@ let server = null;
 let guest_role = null;
 let verified_role = null;
 let mod_role = null;
+let student_role = null;
 let alumni_role = null;
 let officer_role = null;
 let alumni_officer_role = null;
@@ -56,6 +57,7 @@ client.on('ready', async () => {
   guest_role = server.roles.cache.find((role) => role.name === config.discord.guest_role_name);
   verified_role = server.roles.cache.find((role) => role.name === config.discord.verified_role_name);
   mod_role = server.roles.cache.find((role) => role.name === config.discord.mod_role_name);
+  student_role = server.roles.cache.find((role) => role.name === config.discord.student_role_name);
   alumni_role = server.roles.cache.find((role) => role.name === config.discord.alumni_role_name);
   officer_role = server.roles.cache.find((role) => role.name === config.discord.officer_role_name);
   alumni_officer_role = server.roles.cache.find((role) => role.name === config.discord.officer_alumni_role_name);
@@ -351,6 +353,7 @@ client.on('ready', async () => {
     });
   });
 
+  // PVP only permissions for audit command
   fullPermissions.push({
     id: auditCommand.id,
     permissions: [{
@@ -431,7 +434,7 @@ client.on('interactionCreate', async interaction => {
   }
 
   else if (command === 'audit') {
-    [err, message] = await command_setUser.audit(userId, server, alumni_role, officer_role, alumni_officer_role);
+    [err, message] = await command_setUser.audit(server, student_role, alumni_role, officer_role, alumni_officer_role);
   }
 
   else if (command === 'lookup') {
