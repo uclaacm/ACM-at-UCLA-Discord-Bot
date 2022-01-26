@@ -14,7 +14,7 @@ function genCode(n) {
 
 // if email has not been verified, send verification code
 // linked to IAM command
-const iam = async function(server, userid, email, nickname, affiliation) {
+const iam = async function(userid, email, nickname, affiliation) {
   // TODO: store affil_key and not entire string to reduce storage on db
   let affil_key = config.affiliation_map[affiliation];
   if (!affil_key) {
@@ -97,18 +97,6 @@ const iam = async function(server, userid, email, nickname, affiliation) {
     return [{ message: e.toString() }, null];
   }
   await db.close();
-
-  let server_member = await server.members.fetch(userid);
-  let targetRole = affiliation.charAt(0).toUpperCase() + affiliation.slice(1);
-  try {
-    if(!server_member.roles.cache.some((role) => role.name === targetRole)) {
-      let role = server.roles.cache.find((role) => role.name === targetRole);
-      await server_member.roles.add(role);
-    }
-  } catch (e) {
-    console.error(e.toString());
-  }
-
 
   return [
     null,

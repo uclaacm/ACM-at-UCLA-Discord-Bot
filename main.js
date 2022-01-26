@@ -12,7 +12,6 @@ const client = new Discord.Client({
   ]
 });
 let server = null;
-let guest_role = null;
 let verified_role = null;
 let mod_role = null;
 let alumni_role = null;
@@ -47,7 +46,6 @@ client.on('ready', async () => {
 
   // find server and required roles
   server = await client.guilds.fetch(config.discord.server_id);
-  guest_role = server.roles.cache.find((role) => role.name === config.discord.guest_role_name);
   verified_role = server.roles.cache.find((role) => role.name === config.discord.verified_role_name);
   mod_role = server.roles.cache.find((role) => role.name === config.discord.mod_role_name);
   alumni_role = server.roles.cache.find((role) => role.name === config.discord.alumni_role_name);
@@ -365,7 +363,6 @@ client.on('interactionCreate', async interaction => {
     let nickname = args.get('name').value;
     let email = args.get('email').value.toLowerCase();
     [err, message] = await command_iam.iam(
-      server,
       userId,
       email,
       nickname,
@@ -377,12 +374,11 @@ client.on('interactionCreate', async interaction => {
   else if (command === 'verify') {
     let code = args.get('code').value;
     [err, message] = await command_verify.verify(
+      server,
       code,
       member,
-      guest_role,
       verified_role,
       mod_role,
-      alumni_role
     );
   }
 
