@@ -27,8 +27,7 @@ const command_iam = require('./commands/iam');
 const command_verify = require('./commands/verify');
 
 // set user info
-// contains: setPronouns, setMajor, setYear, toggleTransfer,
-//           updateUserNickname, toggleCommitteeOfficer
+// contains: setPronouns, setMajor, setYear, toggleTransfer, updateUserNickname
 const command_setUser = require('./commands/setUser');
 
 // get user info
@@ -43,6 +42,10 @@ const command_msg = require('./commands/msg');
 // contains: getNumVerifiedStats, getMajorStats, getYearStats
 // getNumTransferStats, getAffiliationStats
 const command_getStats = require('./commands/getStats');
+
+// assignRole
+// contains: toggleOfficerRole, toggleInternRoles
+const command_assignRole = require('./commands/assignRole');
 
 // on ready, create db and tables if they don't already exist
 client.on('ready', async () => {
@@ -227,6 +230,20 @@ client.on('ready', async () => {
     defaultPermission: false,
   });
 
+  const internToggleCommand = await server.commands.create({
+    name: 'intern',
+    description: 'Toggle intern roles for a target user based on your committee',
+    options: [
+      {
+        'name': 'user',
+        'description': 'Specify target user either as <username>#<discriminator> or <userid>',
+        'type': 3,
+        'required': true,
+      },
+    ],
+    defaultPermission: false,
+  });
+
   let commandCreateRes = await server.commands.create({
     name: 'lookup',
     description: 'Lookup a user',
@@ -354,21 +371,23 @@ client.on('ready', async () => {
     });
   });
 
-  // officer command to be used by PVP and committtee pres only
-  fullPermissions.push({
-    id: officerToggleCommand.id,
-    permissions: [
-      {
-        id: pvp_role.id,
-        type: 'ROLE',
-        permission: true,
-      },
-      {
-        id: comm_pres_role.id,
-        type: 'ROLE',
-        permission: true,
-      },
-    ]
+  // intern and officer command to be used by PVP and committtee pres only
+  [officerToggleCommand.id, internToggleCommand.id].forEach(id => {
+    fullPermissions.push({
+      id,
+      permissions: [
+        {
+          id: pvp_role.id,
+          type: 'ROLE',
+          permission: true,
+        },
+        {
+          id: comm_pres_role.id,
+          type: 'ROLE',
+          permission: true,
+        },
+      ]
+    });
   });
 
   server.commands.permissions.set({ fullPermissions });
@@ -439,7 +458,12 @@ client.on('interactionCreate', async interaction => {
 
   else if (command === 'officer') {
     let assignee = args.get('user').value;
-    [err, message] = await command_setUser.toggleCommitteeOfficer(member, assignee, server);
+    [err, message] = await command_assignRole.toggleOfficerRoles(member, assignee, server);
+  }
+
+  else if (command === 'intern') {
+    let assignee = args.get('user').value;
+    [err, message] = await command_assignRole.toggleInternRoles(member, assignee, server);
   }
 
   else if (command === 'whoami') {

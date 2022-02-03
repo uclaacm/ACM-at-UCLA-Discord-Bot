@@ -34,16 +34,16 @@ To obtain your verification code, reply to this message with the following comma
 \`\`\`
 `,
   },
-  committee_officer_roles: [
-    'AI Officer',
-    'Board Officer',
-    'Cyber Officer',
-    'Design Officer',
-    'Hack Officer',
-    'ICPC Officer',
-    'Studio Officer',
-    'Teach LA Officer',
-    'ACM-W Officer'
+  committee_names: [
+    'AI',
+    'Board',
+    'Cyber',
+    'Design',
+    'Hack',
+    'ICPC',
+    'Studio',
+    'Teach LA',
+    'ACM-W'
   ],
   majors_list: [
     'aerospace engineering',
