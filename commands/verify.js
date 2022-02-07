@@ -5,7 +5,7 @@ const config = require('../config.' + process.env.NODE_ENV_MODE);
 
 // verify code and and role to access server
 // linked to VERIFY command
-const verify = async function(code, member, guest_role, verified_role, mod_role, alumni_role) {
+const verify = async function(server, code, member, verified_role, mod_role) {
   const isModOrAdmin = member =>
     member.permissions.has(Discord.Permissions.FLAGS.ADMINISTRATOR) ||
     member.roles.cache.has(mod_role.id);
@@ -59,15 +59,20 @@ const verify = async function(code, member, guest_role, verified_role, mod_role,
     /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:([a-z0-9](?:[a-z0-9-]*[a-z0-9])?)\.)+([a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\]))/
   );
 
-  if (row.affiliation === 'other' && !(match_groups && config.allowed_domains.includes(match_groups[1]))) {
-    await member.roles.add(guest_role);
-  }
-  else {
-    // add verified role to non-other ucla user
-    await member.roles.add(verified_role);
-    if (row.affiliation === 'alumni') { // and if alumni, add alumni role
-      await member.roles.add(alumni_role);
+  let server_member = await server.members.fetch(id);
+  let targetRole = row.affiliation.charAt(0).toUpperCase() + row.affiliation.slice(1);
+  try {
+    if(!server_member.roles.cache.some((role) => role.name === targetRole)) {
+      let role = server.roles.cache.find((role) => role.name === targetRole);
+      if (targetRole === 'Other' && !(match_groups && config.allowed_domains.includes(match_groups[1])))
+        await member.roles.add(role);
+      else if (targetRole !== 'Other') {
+        await server_member.roles.add(role);
+        await member.roles.add(verified_role);
+      }
     }
+  } catch (e) {
+    console.error(e.toString());
   }
 
   // set nickname: <name> (<pronouns>)
@@ -125,6 +130,7 @@ const verify = async function(code, member, guest_role, verified_role, mod_role,
   }
 
   await db.close();
+
   return [
     null,
     `Thanks ${row.nickname}! You have been verified and can now access the server! Please use the following commands to tell us a bit more about yourself!
