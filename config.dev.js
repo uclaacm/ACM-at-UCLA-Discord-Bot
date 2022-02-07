@@ -17,6 +17,9 @@ module.exports = {
     alumni_role_name: 'Alumni',
     student_role_name: 'Student',
     faculty_role_name: 'UCLA Faculty and Staff',
+    officer_role_name: 'ACM Officer',
+    officer_alumni_role_name: 'ACM Officer Emeritus',
+    pvp_role_name: 'PVP',
   },
   ses: {
     region: 'us-west-1',

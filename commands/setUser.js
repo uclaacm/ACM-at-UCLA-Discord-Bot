@@ -2,6 +2,98 @@ const sqlite = require('sqlite');
 const sqlite3 = require('sqlite3');
 const config = require('../config.' + process.env.NODE_ENV_MODE);
 
+// Converts "students" in our database to "alumni" and appropriately assigns roles.
+const audit = async function(server, student_role, alumni_role, officer_role, alumni_officer_role) {
+  // open db
+  let db = await sqlite.open({
+    filename: config.db_path,
+    driver: sqlite3.Database,
+  });
+
+  // get todays date
+  let today = new Date();
+  let month = String(today.getMonth() + 1).padStart(2, '0');  // 0 indexing, i.e. January is 0
+  let year = today.getFullYear();
+  //  if the command is run July 2021, it would catch everyone who had just graduated
+  // while if the command was run in May, it would not affect the students who have yet to graduate
+  if (month < 6)
+    year--;
+
+  // get the ids of all users who have have a grad date before today
+  let rows = null;
+  try {
+    rows = await db.all(
+      `
+    SELECT
+        userid
+    FROM users
+    WHERE
+        grad_year <= ?
+    AND
+        affiliation = 'student'`,
+      [year]
+    );
+  } catch (e) {
+    console.error(e.toString());
+    await db.close();
+    return [{ message: e.toString() }, null];
+  }
+
+  // update affiliation in database alumni for the users from previous query
+  try {
+    await db.run(
+      `
+      UPDATE
+          users
+      SET
+          affiliation = 'alumni'
+      WHERE
+          grad_year <= ?
+      AND
+          affiliation  = 'student'`,
+      [year]
+    );
+  } catch (e) {
+    console.error(e.toString());
+    await db.close();
+    return [{ message: e.toString() }, null];
+  }
+
+  await db.close();
+
+  let count = 0;  // keeps track of number of users whose affiliation is updated
+  // traverse through each user
+  for await (const user of rows) {
+    let id = user['userid'];
+    let server_member = await server.members.fetch(id);
+
+    // ensure the user is still in the server (hasn't left)
+    if(server_member) {
+      try {
+        // if user has officer role, update it to the alumni officer role
+        if (server_member.roles.cache.some((role) => role.name === officer_role.name)) {
+          await server_member.roles.remove(officer_role.id);
+          await server_member.roles.add(alumni_officer_role);
+        }
+
+        // if user has student role, remove the student role
+        if (server_member.roles.cache.some((role) => role.name === student_role.name))
+          await server_member.roles.remove(student_role.id);
+        await server_member.roles.add(alumni_role); // add alumni role to everyone regardless
+        count++;
+      } catch(e) {
+        console.error(e.toString());
+      }
+    }
+  }
+
+  // return message that is conditional on count
+  return [
+    null,
+    `Audit successful. ${count === 0 ? 'No users to update.' : `Updated ${count} user${count > 1 ? 's' : ''}.`} Thank you!`
+  ];
+};
+
 // add pronouns to nickname
 // linked to PRONOUNS command
 const setPronouns = async function(userid, pronouns, server) {
@@ -349,4 +441,4 @@ const updateUserNickname = async function(userid, nickname, server) {
   }
 };
 
-module.exports = { setPronouns, setMajor, setYear, toggleTransfer, updateUserNickname };
+module.exports = { audit, setPronouns, setMajor, setYear, toggleTransfer, updateUserNickname };
