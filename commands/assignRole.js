@@ -9,7 +9,7 @@ class MissingRolesError extends Error {
   }
 }
 
-const toggleOfficerRoles = async function(assigner, assigneeInfo, server) {
+const toggleOfficerRoles = async function(assigner, assigneeInfo, baseOfficerRole, server) {
   /**
    * Handler for the /officer command
    *
@@ -25,9 +25,10 @@ const toggleOfficerRoles = async function(assigner, assigneeInfo, server) {
    *
    * @param assigner - the GuildMember object representing the person calling the command
    * @param assigneeInfo - username or userid of user whose role is to be assigned
+   * @param baseOfficerRole - Discord.Role object representing ACM Officer
    * @param server - current Discord.Guild object
    */
-  const baseOfficerRole = server.roles.cache.find(role => role.name === 'ACM Officer');
+
   let committeeOfficerRole;
   try {
     committeeOfficerRole = getCommitteeSpecificRole(assigner, 'Officer', server);
@@ -40,7 +41,7 @@ const toggleOfficerRoles = async function(assigner, assigneeInfo, server) {
   return toggleAssigneeRoles(assigneeInfo, baseOfficerRole, committeeOfficerRole, server);
 };
 
-const toggleInternRoles = async function(assigner, assigneeInfo, server) {
+const toggleInternRoles = async function(assigner, assigneeInfo, baseInternRole, server) {
   /**
    * Handler for the /intern command
    *
@@ -52,7 +53,7 @@ const toggleInternRoles = async function(assigner, assigneeInfo, server) {
    * @param assigneeInfo - username or userid of user whose role is to be assigned
    * @param server - current Discord.Guild object
    */
-  const baseInternRole = server.roles.cache.find(role => role.name === 'ACM Intern');
+
   let committeeInternRole;
   try {
     committeeInternRole = getCommitteeSpecificRole(assigner, 'Intern', server);
@@ -72,6 +73,7 @@ const getCommitteeSpecificRole = function(assigner, roleType, server) {
    *
    * @param assigner - the GuildMember object representing the person calling the command
    * @param roleType - "Officer" or "Intern"
+   * @param baseInternRole - Discord.Role object representing ACM Intern
    * @param server - current Discord.Guild object
    */
 
