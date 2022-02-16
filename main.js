@@ -18,8 +18,10 @@ let mod_role = null;
 let student_role = null;
 let alumni_role = null;
 let officer_role = null;
+let intern_role = null;
 let alumni_officer_role = null;
 let pvp_role = null;
+let comm_pres_role = null;
 
 
 const isModOrAdmin = member =>
@@ -47,6 +49,10 @@ const command_msg = require('./commands/msg');
 // getNumTransferStats, getAffiliationStats
 const command_getStats = require('./commands/getStats');
 
+// assignRole
+// contains: toggleOfficerRole, toggleInternRoles
+const command_assignRole = require('./commands/assignRole');
+
 // on ready, create db and tables if they don't already exist
 client.on('ready', async () => {
   console.log(`Logged in as ${client.user.tag}!`);
@@ -58,8 +64,10 @@ client.on('ready', async () => {
   student_role = server.roles.cache.find((role) => role.name === config.discord.student_role_name);
   alumni_role = server.roles.cache.find((role) => role.name === config.discord.alumni_role_name);
   officer_role = server.roles.cache.find((role) => role.name === config.discord.officer_role_name);
+  intern_role = server.roles.cache.find((role) => role.name === config.discord.intern_role_name);
   alumni_officer_role = server.roles.cache.find((role) => role.name === config.discord.officer_alumni_role_name);
   pvp_role = server.roles.cache.find((role) => role.name === config.discord.pvp_role_name);
+  comm_pres_role = server.roles.cache.find((role) => role.name === config.discord.committee_pres_role_name);
 
 
   // open db
@@ -222,6 +230,33 @@ client.on('ready', async () => {
     description: 'View your registered information',
   });
 
+  const officerToggleCommand = await server.commands.create({
+    name: 'officer',
+    description: 'Toggle officer roles for a target user based on your committee',
+    options: [
+      {
+        'name': 'user',
+        'description': 'Specify target user either as <username>#<discriminator> or <userid>',
+        'type': 3,
+        'required': true,
+      },
+    ],
+    defaultPermission: false,
+  });
+
+  const internToggleCommand = await server.commands.create({
+    name: 'intern',
+    description: 'Toggle intern roles for a target user based on your committee',
+    options: [
+      {
+        'name': 'user',
+        'description': 'Specify target user either as <username>#<discriminator> or <userid>',
+        'type': 3,
+        'required': true,
+      },
+    ],
+  });
+
   const auditCommand = await server.commands.create({
     name: 'audit',
     description: 'Mark any students that have graduated as alumni',
@@ -355,6 +390,25 @@ client.on('ready', async () => {
     });
   });
 
+  // intern and officer command to be used by PVP and committtee pres only
+  [officerToggleCommand.id, internToggleCommand.id].forEach(id => {
+    fullPermissions.push({
+      id,
+      permissions: [
+        {
+          id: pvp_role.id,
+          type: 'ROLE',
+          permission: true,
+        },
+        {
+          id: comm_pres_role.id,
+          type: 'ROLE',
+          permission: true,
+        },
+      ]
+    });
+  });
+
   // PVP only permissions for audit command
   fullPermissions.push({
     id: auditCommand.id,
@@ -428,6 +482,16 @@ client.on('interactionCreate', async interaction => {
 
   else if (command === 'transfer') {
     [err, message] = await command_setUser.toggleTransfer(userId);
+  }
+
+  else if (command === 'officer') {
+    let assignee = args.get('user').value;
+    [err, message] = await command_assignRole.toggleOfficerRoles(member, assignee, officer_role, server);
+  }
+
+  else if (command === 'intern') {
+    let assignee = args.get('user').value;
+    [err, message] = await command_assignRole.toggleInternRoles(member, assignee, intern_role, server);
   }
 
   else if (command === 'whoami') {

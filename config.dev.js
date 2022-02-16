@@ -18,8 +18,10 @@ module.exports = {
     student_role_name: 'Student',
     faculty_role_name: 'UCLA Faculty and Staff',
     officer_role_name: 'ACM Officer',
+    intern_role_name: 'ACM Intern',
     officer_alumni_role_name: 'ACM Officer Emeritus',
     pvp_role_name: 'PVP',
+    committee_pres_role_name: 'Committee President',
   },
   ses: {
     region: 'us-west-1',
@@ -38,6 +40,17 @@ To obtain your verification code, reply to this message with the following comma
 \`\`\`
 `,
   },
+  committee_names: [
+    'AI',
+    'Board',
+    'Cyber',
+    'Design',
+    'Hack',
+    'ICPC',
+    'Studio',
+    'Teach LA',
+    'ACM-W'
+  ],
   majors_list: [
     'aerospace engineering',
     'african american studies',
