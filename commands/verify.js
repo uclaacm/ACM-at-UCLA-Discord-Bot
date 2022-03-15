@@ -61,6 +61,7 @@ const verify = async function(code, member, guest_role, verified_role, mod_role,
 
   if (row.affiliation === 'other' && !(match_groups && config.allowed_domains.includes(match_groups[1]))) {
     await member.roles.add(guest_role);
+    await member.roles.add(verified_role);
   }
   else {
     // add verified role to non-other ucla user
