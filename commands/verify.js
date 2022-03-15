@@ -64,8 +64,10 @@ const verify = async function(server, code, member, verified_role, mod_role) {
   try {
     if(!server_member.roles.cache.some((role) => role.name === targetRole)) {
       let role = server.roles.cache.find((role) => role.name === targetRole);
-      if (targetRole === 'Other' && !(match_groups && config.allowed_domains.includes(match_groups[1])))
+      if (targetRole === 'Other' && !(match_groups && config.allowed_domains.includes(match_groups[1]))) {
         await member.roles.add(role);
+        await member.roles.add(verified_role);
+      }
       else if (targetRole !== 'Other') {
         await server_member.roles.add(role);
         await member.roles.add(verified_role);
