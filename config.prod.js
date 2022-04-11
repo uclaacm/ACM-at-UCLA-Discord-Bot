@@ -5,6 +5,7 @@ module.exports = {
   affiliation_map: {
     student: 's',
     alumni: 'a',
+    faculty: 'f',
     other: 'o',
   },
   discord: {
@@ -14,9 +15,13 @@ module.exports = {
     verified_role_name: 'Verified',
     mod_role_name: 'Moderator',
     alumni_role_name: 'Alumni',
+    student_role_name: 'Student',
+    faculty_role_name: 'UCLA Faculty and Staff',
     officer_role_name: 'ACM Officer',
+    intern_role_name: 'ACM Intern',
     officer_alumni_role_name: 'ACM Officer Emeritus',
     pvp_role_name: 'PVP',
+    committee_pres_role_name: 'Committee President',
   },
   ses: {
     region: 'us-west-1',
@@ -35,6 +40,17 @@ To obtain your verification code, reply to this message with the following comma
 \`\`\`
 `,
   },
+  committee_names: [
+    'AI',
+    'Board',
+    'Cyber',
+    'Design',
+    'Hack',
+    'ICPC',
+    'Studio',
+    'Teach LA',
+    'ACM-W'
+  ],
   majors_list: [
     'aerospace engineering',
     'african american studies',

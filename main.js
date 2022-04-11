@@ -19,13 +19,15 @@ const client = new Discord.Client({
 });
 
 let server = null;
-let guest_role = null;
 let verified_role = null;
 let mod_role = null;
+let student_role = null;
 let alumni_role = null;
 let officer_role = null;
+let intern_role = null;
 let alumni_officer_role = null;
 let pvp_role = null;
+let comm_pres_role = null;
 let weebRole = null;
 let lolRole = null;
 let valorantRole = null;
@@ -64,7 +66,12 @@ const command_msg = require('./commands/msg');
 // getNumTransferStats, getAffiliationStats
 const command_getStats = require('./commands/getStats');
 
+// create reaction role message
+// contains: create_gamer_roles
 const command_createMessage = require('./commands/createRRMessage');
+// assignRole
+// contains: toggleOfficerRole, toggleInternRoles
+const command_assignRole = require('./commands/assignRole');
 
 // on ready, create db and tables if they don't already exist
 client.on('ready', async () => {
@@ -72,13 +79,15 @@ client.on('ready', async () => {
 
   // find server and required roles
   server = await client.guilds.fetch(config.discord.server_id);
-  guest_role = server.roles.cache.find((role) => role.name === config.discord.guest_role_name);
   verified_role = server.roles.cache.find((role) => role.name === config.discord.verified_role_name);
   mod_role = server.roles.cache.find((role) => role.name === config.discord.mod_role_name);
+  student_role = server.roles.cache.find((role) => role.name === config.discord.student_role_name);
   alumni_role = server.roles.cache.find((role) => role.name === config.discord.alumni_role_name);
   officer_role = server.roles.cache.find((role) => role.name === config.discord.officer_role_name);
+  intern_role = server.roles.cache.find((role) => role.name === config.discord.intern_role_name);
   alumni_officer_role = server.roles.cache.find((role) => role.name === config.discord.officer_alumni_role_name);
   pvp_role = server.roles.cache.find((role) => role.name === config.discord.pvp_role_name);
+  comm_pres_role = server.roles.cache.find((role) => role.name === config.discord.committee_pres_role_name);
   weebRole = server.roles.cache.find((role) => role.name === 'Weeb');
   lolRole = server.roles.cache.find((role) => role.name === 'League of Legends');
   valorantRole = server.roles.cache.find((role) => role.name === 'Valorant');
@@ -160,6 +169,10 @@ client.on('ready', async () => {
           {
             'name': 'Alumni',
             'value': 'alumni'
+          },
+          {
+            'name': 'UCLA Faculty and Staff',
+            'value': 'faculty'
           },
           {
             'name': 'Other',
@@ -244,6 +257,33 @@ client.on('ready', async () => {
   await server.commands.create({
     name: 'whoami',
     description: 'View your registered information',
+  });
+
+  const officerToggleCommand = await server.commands.create({
+    name: 'officer',
+    description: 'Toggle officer roles for a target user based on your committee',
+    options: [
+      {
+        'name': 'user',
+        'description': 'Specify target user either as <username>#<discriminator> or <userid>',
+        'type': 3,
+        'required': true,
+      },
+    ],
+    defaultPermission: false,
+  });
+
+  const internToggleCommand = await server.commands.create({
+    name: 'intern',
+    description: 'Toggle intern roles for a target user based on your committee',
+    options: [
+      {
+        'name': 'user',
+        'description': 'Specify target user either as <username>#<discriminator> or <userid>',
+        'type': 3,
+        'required': true,
+      },
+    ],
   });
 
   const auditCommand = await server.commands.create({
@@ -385,6 +425,26 @@ client.on('ready', async () => {
     });
   });
 
+  // intern and officer command to be used by PVP and committtee pres only
+  [officerToggleCommand.id, internToggleCommand.id].forEach(id => {
+    fullPermissions.push({
+      id,
+      permissions: [
+        {
+          id: pvp_role.id,
+          type: 'ROLE',
+          permission: true,
+        },
+        {
+          id: comm_pres_role.id,
+          type: 'ROLE',
+          permission: true,
+        },
+      ]
+    });
+  });
+
+  // PVP only permissions for audit command
   fullPermissions.push({
     id: auditCommand.id,
     permissions: [{
@@ -432,12 +492,11 @@ client.on('interactionCreate', async interaction => {
   else if (command === 'verify') {
     let code = args.get('code').value;
     [err, message] = await command_verify.verify(
+      server,
       code,
       member,
-      guest_role,
       verified_role,
       mod_role,
-      alumni_role
     );
   }
 
@@ -460,12 +519,22 @@ client.on('interactionCreate', async interaction => {
     [err, message] = await command_setUser.toggleTransfer(userId);
   }
 
+  else if (command === 'officer') {
+    let assignee = args.get('user').value;
+    [err, message] = await command_assignRole.toggleOfficerRoles(member, assignee, officer_role, server);
+  }
+
+  else if (command === 'intern') {
+    let assignee = args.get('user').value;
+    [err, message] = await command_assignRole.toggleInternRoles(member, assignee, intern_role, server);
+  }
+
   else if (command === 'whoami') {
     [err, message, embed] = await command_getUser.whoami(userId, server, Discord);
   }
 
   else if (command === 'audit') {
-    [err, message] = await command_setUser.audit(userId, server, alumni_role, officer_role, alumni_officer_role);
+    [err, message] = await command_setUser.audit(server, student_role, alumni_role, officer_role, alumni_officer_role);
   }
 
   else if (command === 'lookup') {

@@ -18,7 +18,7 @@ const iam = async function(userid, email, nickname, affiliation) {
   // TODO: store affil_key and not entire string to reduce storage on db
   let affil_key = config.affiliation_map[affiliation];
   if (!affil_key) {
-    return [null, 'Please provide a valid affiliation (student/alumni/other).'];
+    return [null, 'Please provide a valid affiliation (student/alumni/faculty/other).'];
   }
 
   // regex matches and captures main domain name (index 1) and TLD (index 2)
