@@ -4,13 +4,17 @@
   "description": "ACM at UCLA Discord Server Verification Bot",
   "main": "main.js",
   "scripts": {
-    "test": "jest --verbose ./test",
+    "test": ". ./.env && jest --verbose ./test",
     "start": "source .env && pm2 start main.js --name discord_bot --update-env",
     "dev": "source .env && node main.js",
     "reload": "source .env && pm2 reload discord_bot --update-env",
     "stop": "pm2 stop discord_bot",
     "lint": "eslint \"**/*.js\"",
     "lint-fix": "eslint --fix \"**/*.js\""
+  },
+  "jest": {
+    "globalSetup": "./scripts/jestSetup.js",
+    "globalTeardown": "./scripts/jestTeardown.js"
   },
   "author": "entrohpy",
   "repository": {

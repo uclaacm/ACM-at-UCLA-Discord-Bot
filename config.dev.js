@@ -1,6 +1,7 @@
 module.exports = {
   cmd_prefix: '!',
   db_path: './userinfo.db',
+  test_db_path: './userinfo.test.db',
   allowed_domains: ['ucla'],
   affiliation_map: {
     student: 's',
