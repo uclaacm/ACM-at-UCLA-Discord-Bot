@@ -32,11 +32,11 @@ let valorantRole = null;
 let moviesRole = null;
 let hadesRole = null;
 
-const weebEmoji = '😀';
-const lolEmoji = '😅';
-const valorantEmoji = '😇';
-const moviesEmoji = '🥲';
-const hadesEmoji = '😍';
+let weebEmoji = '';
+let lolEmoji = '';
+let valorantEmoji = '';
+let moviesEmoji = '🎥';
+let hadesEmoji = '';
 
 
 const isModOrAdmin = member =>
@@ -84,6 +84,10 @@ client.on('ready', async () => {
   valorantRole = server.roles.cache.find((role) => role.name === 'Valorant');
   moviesRole = server.roles.cache.find((role) => role.name === 'Movies');
   hadesRole = server.roles.cache.find((role) => role.name === 'Hades');
+  weebEmoji = server.emojis.cache.find(emoji => emoji.name === 'hinata_love');
+  lolEmoji = server.emojis.cache.find(emoji => emoji.name === 'league');
+  valorantEmoji = server.emojis.cache.find(emoji => emoji.name === 'valo');
+  hadesEmoji = server.emojis.cache.find(emoji => emoji.name === 'zaguwu');
 
 
   // open db
@@ -602,15 +606,15 @@ client.on('messageReactionAdd', async(reaction, user) => {
   const channel = server.channels.cache.find((c) => c.name === 'ℹserver-info');
 
   if(reaction.message.channel.id === channel.id) {
-    if (reaction.emoji.name === weebEmoji)
+    if (reaction.emoji.name === weebEmoji.name)
       await reaction.message.guild.members.cache.get(user.id).roles.add(weebRole);
-    else if (reaction.emoji.name === lolEmoji)
+    else if (reaction.emoji.name === lolEmoji.name)
       await reaction.message.guild.members.cache.get(user.id).roles.add(lolRole);
-    else if (reaction.emoji.name === valorantEmoji)
+    else if (reaction.emoji.name === valorantEmoji.name)
       await reaction.message.guild.members.cache.get(user.id).roles.add(valorantRole);
     else if (reaction.emoji.name === moviesEmoji)
       await reaction.message.guild.members.cache.get(user.id).roles.add(moviesRole);
-    else if (reaction.emoji.name === hadesEmoji)
+    else if (reaction.emoji.name === hadesEmoji.name)
       await reaction.message.guild.members.cache.get(user.id).roles.add(hadesRole);
   }
 });
@@ -624,15 +628,15 @@ client.on('messageReactionRemove', async(reaction, user) => {
   const channel = server.channels.cache.find((c) => c.name === 'ℹserver-info');
 
   if(reaction.message.channel.id === channel.id) {
-    if (reaction.emoji.name === weebEmoji)
+    if (reaction.emoji.name === weebEmoji.name)
       await reaction.message.guild.members.cache.get(user.id).roles.remove(weebRole);
-    else if (reaction.emoji.name === lolEmoji)
+    else if (reaction.emoji.name === lolEmoji.name)
       await reaction.message.guild.members.cache.get(user.id).roles.remove(lolRole);
-    else if (reaction.emoji.name === valorantEmoji)
+    else if (reaction.emoji.name === valorantEmoji.name)
       await reaction.message.guild.members.cache.get(user.id).roles.remove(valorantRole);
     else if (reaction.emoji.name === moviesEmoji)
       await reaction.message.guild.members.cache.get(user.id).roles.remove(moviesRole);
-    else if (reaction.emoji.name === hadesEmoji)
+    else if (reaction.emoji.name === hadesEmoji.name)
       await reaction.message.guild.members.cache.get(user.id).roles.remove(hadesRole);
   }
 });
