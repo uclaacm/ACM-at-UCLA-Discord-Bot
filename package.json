@@ -4,7 +4,7 @@
   "description": "ACM at UCLA Discord Server Verification Bot",
   "main": "main.js",
   "scripts": {
-    "test": ". ./.env && jest --verbose ./test",
+    "test": "export NODE_ENV_MODE=dev && jest --verbose ./test",
     "start": "source .env && pm2 start main.js --name discord_bot --update-env",
     "dev": "source .env && node main.js",
     "reload": "source .env && pm2 reload discord_bot --update-env",
