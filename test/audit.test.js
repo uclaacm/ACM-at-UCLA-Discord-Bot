@@ -1,31 +1,22 @@
-const sqlite = require('sqlite');
-const sqlite3 = require('sqlite3');
 const config = require('../config.' + process.env.NODE_ENV_MODE);
 const jestMock = require('jest-mock');
 
 const command_setUser = require('../commands/setUser');
 const utils = require('./utils');
+const Database = require('./database');
 
 let db;
+
 const TEST_USERID = 12345;
 
-// Setup database
 beforeAll(async () => {
   // Temporary injection of test DB path, so that command_setUser
   // uses the test DB instead of the main one
   config.db_path = config.test_db_path;
 
-  db = await sqlite.open({
-    filename: config.db_path,
-    driver: sqlite3.Database,
-  });
+  // Get shared database object
+  db = await Database.getDB();
 });
-
-// Teardown database
-afterAll(async () => {
-  await db.close();
-});
-
 
 describe('audit', () => {
   // Mock the Discord objects for the audit command
