@@ -3,17 +3,22 @@ const sqlite3 = require('sqlite3');
 const config = require('../config.' + process.env.NODE_ENV_MODE);
 
 // Converts "students" in our database to "alumni" and appropriately assigns roles.
-const audit = async function(server, student_role, alumni_role, officer_role, alumni_officer_role) {
+const audit = async function(
+  server,
+  student_role,
+  alumni_role,
+  officer_role,
+  alumni_officer_role,
+  audit_date = new Date() // date of audit (defaults to today)
+) {
   // open db
   let db = await sqlite.open({
     filename: config.db_path,
     driver: sqlite3.Database,
   });
 
-  // get todays date
-  let today = new Date();
-  let month = String(today.getMonth() + 1).padStart(2, '0');  // 0 indexing, i.e. January is 0
-  let year = today.getFullYear();
+  let month = String(audit_date.getMonth() + 1).padStart(2, '0');  // 0 indexing, i.e. January is 0
+  let year = audit_date.getFullYear();
   //  if the command is run July 2021, it would catch everyone who had just graduated
   // while if the command was run in May, it would not affect the students who have yet to graduate
   if (month < 6)
