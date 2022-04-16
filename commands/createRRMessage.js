@@ -6,8 +6,8 @@ const createRRMessage = async function(server, weebEmoji, lolEmoji, valorantEmoj
 
     let embed = new Discord.MessageEmbed()
       .setColor('#1e6cff')
-      .setTitle('Gamer Role Selection')
-      .setDescription('Choose a gamer role to interact with others of the same role!\n\n'
+      .setTitle('Activity Role Selection')
+      .setDescription('Choose an activity role to interact with others of the same role!\n\n'
         + `${weebEmoji} for the Weeb role\n`
         + `${lolEmoji} for the League of Legends role\n`
         + `${valorantEmoji} for the Valorant role\n`

@@ -406,8 +406,8 @@ client.on('ready', async () => {
   });
 
   commandCreateRes = await server.commands.create({
-    name: 'create_gamer_roles',
-    description: 'Set up reaction role message for gaming roles.',
+    name: 'create_activity_roles',
+    description: 'Set up reaction role message for activity roles.',
     defaultPermission: false,
   });
   modCommandIds.push(commandCreateRes.id);
@@ -565,7 +565,7 @@ client.on('interactionCreate', async interaction => {
     [err, message] = await command_msg.getMsg(type);
   }
 
-  else if (command === 'create_gamer_roles') {
+  else if (command === 'create_activity_roles') {
     [err, message] = await command_createMessage.createRRMessage(server, weebEmoji, lolEmoji, valorantEmoji, moviesEmoji, hadesEmoji);
   }
 
