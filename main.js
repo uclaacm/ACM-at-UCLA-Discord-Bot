@@ -8,7 +8,13 @@ const config = require('./config.' + process.env.NODE_ENV_MODE);
 const client = new Discord.Client({
   intents: [
     Discord.Intents.FLAGS.GUILDS,
-    Discord.Intents.FLAGS.GUILD_MEMBERS
+    Discord.Intents.FLAGS.GUILD_MEMBERS,
+    Discord.Intents.FLAGS.GUILD_MESSAGE_REACTIONS
+  ],
+  partials: [
+    'MESSAGE',
+    'CHANNEL',
+    'REACTION'
   ]
 });
 
@@ -22,6 +28,17 @@ let intern_role = null;
 let alumni_officer_role = null;
 let pvp_role = null;
 let comm_pres_role = null;
+let weebRole = null;
+let lolRole = null;
+let valorantRole = null;
+let moviesRole = null;
+let hadesRole = null;
+
+let weebEmoji = '';
+let lolEmoji = '';
+let valorantEmoji = '';
+let moviesEmoji = '🎥';
+let hadesEmoji = '';
 
 
 const isModOrAdmin = member =>
@@ -49,6 +66,9 @@ const command_msg = require('./commands/msg');
 // getNumTransferStats, getAffiliationStats
 const command_getStats = require('./commands/getStats');
 
+// create reaction role message
+// contains: create_gamer_roles
+const command_createMessage = require('./commands/createRRMessage');
 // assignRole
 // contains: toggleOfficerRole, toggleInternRoles
 const command_assignRole = require('./commands/assignRole');
@@ -68,6 +88,15 @@ client.on('ready', async () => {
   alumni_officer_role = server.roles.cache.find((role) => role.name === config.discord.officer_alumni_role_name);
   pvp_role = server.roles.cache.find((role) => role.name === config.discord.pvp_role_name);
   comm_pres_role = server.roles.cache.find((role) => role.name === config.discord.committee_pres_role_name);
+  weebRole = server.roles.cache.find((role) => role.name === 'Weeb');
+  lolRole = server.roles.cache.find((role) => role.name === 'League of Legends');
+  valorantRole = server.roles.cache.find((role) => role.name === 'Valorant');
+  moviesRole = server.roles.cache.find((role) => role.name === 'Movies');
+  hadesRole = server.roles.cache.find((role) => role.name === 'Hades');
+  weebEmoji = server.emojis.cache.find(emoji => emoji.name === 'hinata_love');
+  lolEmoji = server.emojis.cache.find(emoji => emoji.name === 'league');
+  valorantEmoji = server.emojis.cache.find(emoji => emoji.name === 'valo');
+  hadesEmoji = server.emojis.cache.find(emoji => emoji.name === 'zaguwu');
 
 
   // open db
@@ -375,6 +404,12 @@ client.on('ready', async () => {
     ],
     defaultPermission: false,
   });
+
+  commandCreateRes = await server.commands.create({
+    name: 'create_activity_roles',
+    description: 'Set up reaction role message for activity roles.',
+    defaultPermission: false,
+  });
   modCommandIds.push(commandCreateRes.id);
 
   // enable mod commands for users with mod role
@@ -530,6 +565,10 @@ client.on('interactionCreate', async interaction => {
     [err, message] = await command_msg.getMsg(type);
   }
 
+  else if (command === 'create_activity_roles') {
+    [err, message] = await command_createMessage.createRRMessage(server, weebEmoji, lolEmoji, valorantEmoji, moviesEmoji, hadesEmoji);
+  }
+
   // NOTE: whenever nicknames are being set anywhere, bot can only set nicknames for people that have roles lower than bot
   // (otherwise causes DiscordAPIError: Missing Permissions)
   else if (command === 'name') {
@@ -624,6 +663,50 @@ client.on('guildMemberAdd', async (member) => {
     firstMsg = `Welcome back ${row.nickname}!
 You have been auto-verified with your email address ${row.email}. If you think this is a mistake or you would like your information removed, please contact a Moderator.`;
     member.send(firstMsg);
+  }
+});
+
+client.on('messageReactionAdd', async(reaction, user) => {
+  if(reaction.message.partial)  await reaction.message.fetch();
+  if(reaction.partial) await reaction.fetch();
+  if (user.bot) return;
+  if(!reaction.message.guild) return;
+
+  const channel = server.channels.cache.find((c) => c.name === 'ℹserver-info');
+
+  if(reaction.message.channel.id === channel.id) {
+    if (reaction.emoji.name === weebEmoji.name)
+      await reaction.message.guild.members.cache.get(user.id).roles.add(weebRole);
+    else if (reaction.emoji.name === lolEmoji.name)
+      await reaction.message.guild.members.cache.get(user.id).roles.add(lolRole);
+    else if (reaction.emoji.name === valorantEmoji.name)
+      await reaction.message.guild.members.cache.get(user.id).roles.add(valorantRole);
+    else if (reaction.emoji.name === moviesEmoji)
+      await reaction.message.guild.members.cache.get(user.id).roles.add(moviesRole);
+    else if (reaction.emoji.name === hadesEmoji.name)
+      await reaction.message.guild.members.cache.get(user.id).roles.add(hadesRole);
+  }
+});
+
+client.on('messageReactionRemove', async(reaction, user) => {
+  if(reaction.message.partial)  await reaction.message.fetch();
+  if(reaction.partial) await reaction.fetch();
+  if (user.bot) return;
+  if(!reaction.message.guild) return;
+
+  const channel = server.channels.cache.find((c) => c.name === 'ℹserver-info');
+
+  if(reaction.message.channel.id === channel.id) {
+    if (reaction.emoji.name === weebEmoji.name)
+      await reaction.message.guild.members.cache.get(user.id).roles.remove(weebRole);
+    else if (reaction.emoji.name === lolEmoji.name)
+      await reaction.message.guild.members.cache.get(user.id).roles.remove(lolRole);
+    else if (reaction.emoji.name === valorantEmoji.name)
+      await reaction.message.guild.members.cache.get(user.id).roles.remove(valorantRole);
+    else if (reaction.emoji.name === moviesEmoji)
+      await reaction.message.guild.members.cache.get(user.id).roles.remove(moviesRole);
+    else if (reaction.emoji.name === hadesEmoji.name)
+      await reaction.message.guild.members.cache.get(user.id).roles.remove(hadesRole);
   }
 });
 
