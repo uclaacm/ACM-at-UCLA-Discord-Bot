@@ -4,17 +4,13 @@
   "description": "ACM at UCLA Discord Server Verification Bot",
   "main": "main.js",
   "scripts": {
-    "test": "export NODE_ENV_MODE=dev && jest --verbose ./test",
+    "test": "jest --verbose ./test",
     "start": "source .env && pm2 start main.js --name discord_bot --update-env",
     "dev": "source .env && node main.js",
     "reload": "source .env && pm2 reload discord_bot --update-env",
     "stop": "pm2 stop discord_bot",
     "lint": "eslint \"**/*.js\"",
     "lint-fix": "eslint --fix \"**/*.js\""
-  },
-  "jest": {
-    "globalSetup": "./scripts/jestSetup.js",
-    "globalTeardown": "./scripts/jestTeardown.js"
   },
   "author": "entrohpy",
   "repository": {
@@ -26,6 +22,7 @@
     "aws-sdk": "^2.985.0",
     "discord.js": "^13.1.0",
     "dotenv": "^10.0.0",
+    "googleapis": "^108.0.0",
     "sqlite": "^4.0.21",
     "sqlite3": "^5.0.2"
   },

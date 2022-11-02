@@ -292,6 +292,12 @@ client.on('ready', async () => {
     defaultPermission: false,
   });
 
+  const setOfficerRolesCommand = await server.commands.create({
+    name: 'set_officer_roles',
+    description: 'Get and assign the officer roles',
+    defaultPermission: false,
+  });
+
   let commandCreateRes = await server.commands.create({
     name: 'lookup',
     description: 'Lookup a user',
@@ -444,14 +450,16 @@ client.on('ready', async () => {
     });
   });
 
-  // PVP only permissions for audit command
-  fullPermissions.push({
-    id: auditCommand.id,
-    permissions: [{
-      id: pvp_role.id,
-      type: 'ROLE',
-      permission: true,
-    }]
+  // PVP only permissions for audit and set officer roles command
+  [auditCommand.id, setOfficerRolesCommand.id].forEach(id => {
+    fullPermissions.push({
+      id: id,
+      permissions: [{
+        id: pvp_role.id,
+        type: 'ROLE',
+        permission: true,
+      }]
+    });
   });
 
   server.commands.permissions.set({ fullPermissions });
@@ -535,6 +543,10 @@ client.on('interactionCreate', async interaction => {
 
   else if (command === 'audit') {
     [err, message] = await command_setUser.audit(server, student_role, alumni_role, officer_role, alumni_officer_role);
+  }
+
+  else if (command == 'set_officer_roles') {
+    [err, message] = await command_assignRole.setOfficerRoles();
   }
 
   else if (command === 'lookup') {
