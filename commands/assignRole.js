@@ -1,6 +1,10 @@
+const { google } = require('googleapis');
 const sqlite = require('sqlite');
 const sqlite3 = require('sqlite3');
 const config = require('../config.' + process.env.NODE_ENV_MODE);
+
+const SHEETS_API_KEY = process.env.SHEETS_API_KEY;
+const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
 
 class MissingRolesError extends Error {
   constructor(message) {
@@ -8,6 +12,100 @@ class MissingRolesError extends Error {
     this.name = 'MissingRoleError';
   }
 }
+
+const setOfficerRoles = async function () {
+  const sheets = google.sheets('v4');
+  // key=Spreadsheet roles, value=Discord roles
+  // const OFFICER_ROLES = {
+  //   'Hard-coded-role': 'President',
+  //   'Board, Internal': 'Board Officer',
+  //   'Board, External': 'Board Officer',
+  //   AI: 'AI Officer',
+  //   Cyber: 'Cyber Officer',
+  //   Design: 'Design Officer',
+  //   'Game Studio': 'Studio Officer',
+  //   Hack: 'Hack Officer',
+  //   ICPC: 'ICPC Officer',
+  //   'Teach LA': 'Teach LA Officer',
+  //   W: 'ACM-W Officer',
+  // };
+
+  const PVP_ROLES = new Set([
+    'President',
+    'Internal Vice President',
+    'External Vice President',
+  ]);
+
+  let res = null;
+  const userRoles = new Map();
+
+  try {
+    // Get roles from google sheets
+    res = await sheets.spreadsheets.values.batchGet(
+      {
+        spreadsheetId: SPREADSHEET_ID,
+        ranges: ['TestServer!E:E', 'TestServer!C:C', 'TestServer!D:D'],
+        key: SHEETS_API_KEY,
+      });
+
+  } catch(e) {
+    return [e, null];
+  }
+
+  // Check roles and discordTags are there
+  const rows = res?.data.valueRanges;
+  if (!rows || rows.length === 0) {
+    return ['No data found', null];
+  } else {
+    const roles = rows[0].values;
+    const discordTags = rows[1].values;
+    const committees = rows[2].values;
+
+    if (!roles || !discordTags) {
+      return ['Error fetching values', null];
+    }
+
+    // Initialize output
+    const rowsLength = Math.min(roles.length, discordTags.length, committees.length);
+
+    // Add discord tags to output dict
+    for (let i = 1; i < rowsLength; i++) {
+      if (discordTags[i].length > 0) {
+        const currTag = discordTags[i][0];
+        const currRole = roles[i][0];
+        const currCommittee = committees[i][0];
+
+        if (currTag && currTag !== '') {
+          if (!userRoles.has(currTag)) {
+            userRoles.set(currTag, new Set());
+          }
+          const rolesList = userRoles.get(currTag);
+          if (rolesList !== undefined ) {
+            if (currRole == 'Intern') {
+              rolesList.add('ACM Intern');
+              rolesList.add(`${currCommittee} Intern`);
+            } else {
+              rolesList.add('ACM Officer');
+              rolesList.add(`${currCommittee} Officer`);
+              if (PVP_ROLES.has(currRole)) {
+                rolesList.add(currRole);
+                rolesList.add('PVP');
+              } else if (currRole == 'Committee President') {
+                rolesList.add(currRole);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    console.log(userRoles);
+
+    // TODO: iterate through the map and assign roles
+
+    return [null, 'Assigned officer roles successfully'];
+  }
+};
 
 const toggleOfficerRoles = async function(assigner, assigneeInfo, baseOfficerRole, server) {
   /**
@@ -238,4 +336,4 @@ const toggleAssigneeRoles = async function(assigneeInfo, baseRole, committeeRole
   }
 };
 
-module.exports = { toggleOfficerRoles, toggleInternRoles };
+module.exports = { setOfficerRoles, toggleOfficerRoles, toggleInternRoles };
