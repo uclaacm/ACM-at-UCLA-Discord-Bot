@@ -6,7 +6,7 @@ import { getCssStringFromCommittee, generateSingleEvent } from "./lib.mjs";
 
 // .env config
 dotenv.config({ path: ".env.local" });
-const SPREADSHEET_ID = process.env.EVENTS_SPREADSHEET_ID;
+const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
 const SERVICE_ACCOUNT = process.env.SERVICE_ACCOUNT ?? "";
 
 // Week one MONDAY of the quarter (y, m (base 0), d)
@@ -115,35 +115,21 @@ function getRecurringEventsOfWeek(rows, n) {
         const date = new Date(FIRST_DAY_OF_QUARTER);
         date.setDate(date.getDate() + d);
 
-        // events.push(
-        //   generateSingleEvent({
-        //     id: null,
-        //     title: row[1],
-        //     start: null,
-        //     end: null,
-        //     committee: getCssStringFromCommittee(row[0]),
-        //     location: row[7] ?? "",
-        //     description: row[8] ?? "",
-        //     links: null,
-        //     rawStart: row[5],
-        //     rawEnd: row[6],
-        //     date: date.toISOString().split("T")[0],
-        //     fblink: row[9],
-        //     banner: row[10],
-        //   })
-        // );
-
         events.push(
           generateSingleEvent({
-            channel_id: null,
-            entity_metadata: { location: row[7] ?? "" },
-            name: row[1],
-            privacy_level: 2,
-            start: row[5].toISOString(),
-            end: row[6].toISOString(),
+            id: null,
+            title: row[1],
+            start: null,
+            end: null,
+            committee: getCssStringFromCommittee(row[0]),
+            location: row[7] ?? "",
             description: row[8] ?? "",
-            entity_type: 3,
-            image: row[10],
+            links: null,
+            rawStart: row[5],
+            rawEnd: row[6],
+            date: date.toISOString().split("T")[0],
+            fblink: row[9],
+            banner: row[10],
           })
         );
       } catch (err) {
