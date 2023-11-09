@@ -69,18 +69,14 @@ async function getSingleEventsOfWeek(n) {
     try {
       events.push(
         generateSingleEvent({
-          id: null,
           title: row[1],
           start: null,
           end: null,
-          committee: getCssStringFromCommittee(row[0]),
           location: row[5] ?? "",
           description: row[6] ?? "",
-          links: null,
           rawStart: row[3],
           rawEnd: row[4],
           date: row[2],
-          fblink: row[7],
           banner: row[8],
         })
       );
@@ -117,18 +113,14 @@ function getRecurringEventsOfWeek(rows, n) {
 
         events.push(
           generateSingleEvent({
-            id: null,
             title: row[1],
             start: null,
             end: null,
-            committee: getCssStringFromCommittee(row[0]),
             location: row[7] ?? "",
             description: row[8] ?? "",
-            links: null,
             rawStart: row[5],
             rawEnd: row[6],
             date: date.toISOString().split("T")[0],
-            fblink: row[9],
             banner: row[10],
           })
         );

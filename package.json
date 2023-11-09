@@ -5,7 +5,7 @@
   "main": "main.js",
   "scripts": {
     "test": "export NODE_ENV_MODE=dev && jest --verbose ./test",
-    "start": "source .env && pm2 start main.js --name discord_bot --update-env",
+    "start": "node ./scripts/generate_events.mjs && source .env && pm2 start main.js --name discord_bot --update-env",
     "dev": "source .env && node main.js",
     "reload": "source .env && pm2 reload discord_bot --update-env",
     "stop": "pm2 stop discord_bot",

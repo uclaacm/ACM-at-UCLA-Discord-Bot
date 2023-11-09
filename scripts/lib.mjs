@@ -24,30 +24,23 @@ const getCssStringFromCommittee = (committee) => {
 
 const generateSingleEvent = ({
   // final keys
-  id,
   title,
   start,
   end,
-  committee,
   location,
   description,
-  links,
   // non-final keys that need to be processed
   rawStart,
   rawEnd,
   date,
-  fblink,
   banner,
 }) => {
-  let allDay = false;
-
   if (!start && !end) {
     if (!date) {
       throw new Error("Missing date; can't proceed");
     }
     // If rawStart or rawEnd is missing, set allDay to true
     if (!rawStart) {
-      allDay = true;
       start = moment(`${date}`, "YYYY-MM-DD LT").valueOf();
     } else {
       const startHr = rawStart.trim();
@@ -55,32 +48,11 @@ const generateSingleEvent = ({
     }
 
     if (!rawEnd) {
-      allDay = true;
       end = moment(`${date}`, "YYYY-MM-DD LT").valueOf();
     } else {
       const endHr = rawEnd.trim();
       end = moment(`${date} ${endHr}`, "YYYY-MM-DD LT").valueOf();
     }
-  }
-
-  if (!links) {
-    links = [];
-  }
-  if (location.includes("ucla.zoom.us")) {
-    const zoomLink = location;
-    location = "Zoom";
-    links.push({
-      text: "Zoom Link",
-      href: zoomLink,
-      ext: true,
-    });
-  }
-  if (fblink) {
-    links.push({
-      text: "Facebook Event",
-      href: fblink,
-      ext: true,
-    });
   }
 
   if (!title) {
@@ -95,15 +67,11 @@ const generateSingleEvent = ({
   }
 
   return {
-    id,
     title,
-    allDay,
     start,
     end,
     location,
-    committee,
     description,
-    links,
     banner,
   };
 };
